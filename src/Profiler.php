@@ -30,8 +30,8 @@ class Profiler {
 	public array $nodesActive = [];
 	public array $groupsPhase0 = [];
 	public array $groupsPhase1 = [];
-	private Graph $graph; 
-	private GraphViz $graphviz; 
+	public Graph $graph; 
+	public GraphViz $graphviz; 
 	
 	public function __construct() {
 		$this->graphviz = new  GraphViz(); 
@@ -174,8 +174,11 @@ class Profiler {
 			}
 			$i++;
 		}
-		// This is only to use the darkest color.
-		$adjust = $k - $oldN;
+		
+		// Integer: Darkness of colors when only a subrange of colors are used.
+		// 0          => lightest colors.
+		// $k - $oldN => darkest colors.
+		$adjust = intdiv($k - $oldN,2);
 
 		foreach ( $V as $nodeId => $node )  {
 			$excTime = $node->attributes['timeExclusive'];
@@ -211,7 +214,9 @@ class Profiler {
 					$source->setAttribute('graphviz.style', 'filled');
 					$source->setAttribute('graphviz.fontname', "Courier-Bold"); 
 					$source->setAttribute('graphviz.shape', "rect");
-					$source->setAttribute('colorscheme', 'orange9'); 
+					$source->setAttribute('colorscheme', 'orange9');
+					$source->setAttribute('graphviz.URL', 'https://segmentprofiler.org/subGraph/'.$arrow->sourceId);
+					$source->setAttribute('graphviz.target', '_parent'); 
 					if (isset ($V[$arrow->sourceId]->attributes['colorCode']) ) {
 						$cC = $V[$arrow->sourceId]->attributes['colorCode'];
 						$source->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);
@@ -227,7 +232,11 @@ class Profiler {
 					$target->setAttribute('graphviz.label', $this->getLabel($arrow->targetId)); 
 					$target->setAttribute('graphviz.style', 'filled');
 					$target->setAttribute('graphviz.fontname', "Courier-Bold"); 
-					$target->setAttribute('graphviz.shape', "rect");  
+					$target->setAttribute('graphviz.shape', "rect"); 
+					if ( ! empty($A[$arrow->targetId])) {
+						$target->setAttribute('graphviz.URL', 'https://segmentprofiler.org/subGraph/'.$arrow->targetId); 
+						$target->setAttribute('graphviz.target', '_parent');
+					}
 					if (isset ($V[$arrow->targetId]->attributes['colorCode']) ) {
 						$cC = $V[$arrow->targetId]->attributes['colorCode'];
 						$target->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);	
@@ -261,10 +270,6 @@ class Profiler {
 		$grTxt = isset($node->groupId) ? " in " . $node->groupId : "";
 		$name = $node->attributes['label']; 
 		return "$nodeId: $name$timeTxt$grTxt";
-	}
-	
-	public function createSvgHtml($dot) {
-		
 	}
 	
 	private function visitNodes($beforeChildren = null, $afterChildren = null, $init = null, $finalize = null) {
