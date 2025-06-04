@@ -1,7 +1,7 @@
 <?php  
 require_once('vendor/autoload.php');  
 use PhpParser\Error;  
-use PhpParser\NodeDumper;  
+//use PhpParser\NodeDumper;  
 use PhpParser\ParserFactory;  
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
@@ -22,8 +22,11 @@ $stmtcode = <<<'STATEMENTS'
 <?php
 global $stringAction;
 $scriptStartId = getId();
-$stringAction .= $sriptStartId.":node:startName=".explode('::',__METHOD__)[1].PHP_EOL;
+$stringAction .= $scriptStartId.":node:startName=".explode('::',__METHOD__)[1].PHP_EOL;
 $stringAction .= $scriptStartId.":node:endName=none".PHP_EOL;
+$scriptTimeFct[$scriptStartId] = -hrtime(true);
+$scriptTimeFct[$scriptStartId] += hrtime(true);
+$stringAction .= $scriptStartId . ":group:timeFct={$scriptTimeFct[$scriptStartId]}" . PHP_EOL;
 STATEMENTS;
 
 try {
@@ -34,30 +37,45 @@ try {
    	return;
 }
 
-$globStmt = $stmtast[0];
-$stmt0    = $stmtast[1];
-$stmt1    = $stmtast[2];
-$stmt2    = $stmtast[3];
-
 //$dumper = new NodeDumper;
 //echo $dumper->dump($stmtast) . "\n";
 
-
-$traverser = new NodeTraverser();
-$traverser->addVisitor(new class extends NodeVisitorAbstract {
+class Visitor extends NodeVisitorAbstract {
+	
+	private $stmt; 
+	
+	public function __construct($stmtast) {
+		$this->stmtast = $stmtast; 
+	}
+	
 	public function leaveNode(Node $node) {
-		global $globStmt, $stmt0, $stmt1, $stmt2;
+		$stmtGlobal		= $this->stmtast[0];
+		$stmtGetId		= $this->stmtast[1];
+		$stmtStartName	= $this->stmtast[2];
+		$stmtEndName	= $this->stmtast[3];
+		$stmtTimeInit	= $this->stmtast[4];
+		$stmtTimeSet	= $this->stmtast[5];
+		$stmtTimeFct	= $this->stmtast[6];
+		
 		if ($node instanceof ClassMethod && is_array($node->stmts)) {
-			array_unshift($node->stmts , $stmt1);  
-			array_unshift($node->stmts , $stmt0);
-			array_unshift($node->stmts , $globStmt);
-			$node->stmts[] = $stmt2; 
+			array_unshift($node->stmts , $stmtTimeInit);  
+			array_unshift($node->stmts , $stmtStartName);  
+			array_unshift($node->stmts , $stmtGetId);
+			array_unshift($node->stmts , $stmtGlobal);
+			$node->stmts[] = $stmtTimeSet;
+			$node->stmts[] = $stmtTimeFct;
+			$node->stmts[] = $stmtEndName;
 		}
 		if ( get_class($node) == "PhpParser\Node\Stmt\Return_" ) {
-			return [$stmt2,$node ];
+			return [$stmtTimeSet, $stmtTimeFct, $stmtEndName,$node ];
+			//return [$stmtEndName,$node ];
 		}
 	}
-});
+}
+
+$traverser = new NodeTraverser();
+$visitor   = new Visitor($stmtast); 
+$traverser->addVisitor($visitor);
 
 $ast = $traverser->traverse($ast);
 
