@@ -34,20 +34,17 @@ class SegmentProfilerController extends AbstractController {
         );
 	}
 		
-	#[Route('/defaultGrouping')]
-	public function showDefaultGrouping(Profiler $profiler): Response {
-		$this->setDefaultGroups ($profiler); 
-        $profiler->createGraph();
-		$svgHtml = $this->gv->createImageHtml($profiler->graph); 
-		return new Response(
-            '<html><body>'.$svgHtml.'</body></html>'
-        );
-	}
-
-	#[Route('/subGraph/{nodeId}')]
-	public function showSubGraph(Profiler $profiler, $nodeId): Response {
+	#[Route('/drawgraph/{startId}/{toUngroup}', name: 'drawgraph' )]
+	public function drawGraph(Profiler $profiler, $startId = null, $toUngroup = ""): Response {
 		$this->setDefaultGroups ($profiler);
-        $profiler->createGraph($profiler->getSubGraph($nodeId));
+		if ( !empty($toUngroup) ) {
+			$toUngroupArr = explode("_", substr($toUngroup, 0, -1));
+			foreach($toUngroupArr as $groupId) {
+				$profiler->deactivateGroup($groupId);
+			}
+		}
+		$profiler->setColorCode(); 
+        $profiler->createGraph($profiler->getSubGraph($startId), $color = false, $toUngroup);
 		$svgHtml = $this->gv->createImageHtml($profiler->graph); 
 		return new Response(
             '<html><body>'.$svgHtml.'</body></html>'

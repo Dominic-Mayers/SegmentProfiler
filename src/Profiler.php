@@ -2,7 +2,8 @@
 namespace App;
 
 use Graphp\GraphViz\GraphViz; 
-use Graphp\Graph\Graph; 
+use Graphp\Graph\Graph;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 require_once ('Node.php');
 require_once ('Arrow.php');
@@ -30,10 +31,13 @@ class Profiler {
 	public array $nodesActive = [];
 	public array $groupsPhase0 = [];
 	public array $groupsPhase1 = [];
-	public Graph $graph; 
-	public GraphViz $graphviz; 
+	public array $colorCode = [];
+	public Graph $graph;
+	public GraphViz $graphviz;
 	
-	public function __construct() {
+	public function __construct(
+		private UrlGeneratorInterface $urlGenerator,
+	) {
 		$this->graphviz = new  GraphViz(); 
 	}
 
@@ -198,11 +202,13 @@ class Profiler {
 		}
 	}
 
-	public function createGraph($graphArr = null ): string {
+	public function createGraph($graphArr = null , $color=true, $toUngroup =  ''): string {
 		$cM = $this->cM; 
 		$this->graph = new Graph();
-		[$V, $A] = $graphArr ?? [$this->nodesActive, $this->arrowsActive];
-		$this->setColorCode($V); 
+		[$V, $A, $R] = $graphArr ?? [$this->nodesActive, $this->arrowsActive, $this->rootId];
+		if ($color) {
+			$this->setColorCode($V);
+		}
 		if (empty($A)) { return "";}
 		$gvNodes = [];
 		foreach ($A as $adj) {
@@ -215,7 +221,12 @@ class Profiler {
 					$source->setAttribute('graphviz.fontname', "Courier-Bold"); 
 					$source->setAttribute('graphviz.shape', "rect");
 					$source->setAttribute('colorscheme', 'orange9');
-					$source->setAttribute('graphviz.URL', 'https://segmentprofiler.org/subGraph/'.$arrow->sourceId);
+					$url = $this->urlGenerator->generate(
+						'drawgraph', 
+						['toUngroup' => $toUngroup, 'startId' => $arrow->sourceId ], 
+						UrlGeneratorInterface::ABSOLUTE_URL
+					);
+					$source->setAttribute('graphviz.URL', $url );
 					$source->setAttribute('graphviz.target', '_parent'); 
 					if (isset ($V[$arrow->sourceId]->attributes['colorCode']) ) {
 						$cC = $V[$arrow->sourceId]->attributes['colorCode'];
@@ -234,9 +245,23 @@ class Profiler {
 					$target->setAttribute('graphviz.fontname', "Courier-Bold"); 
 					$target->setAttribute('graphviz.shape', "rect"); 
 					if ( ! empty($A[$arrow->targetId])) {
-						$target->setAttribute('graphviz.URL', 'https://segmentprofiler.org/subGraph/'.$arrow->targetId); 
+						$url = $this->urlGenerator->generate(
+							'drawgraph',
+							['toUngroup' => $toUngroup, 'startId' => $arrow->targetId ], 
+							UrlGeneratorInterface::ABSOLUTE_URL
+						);
+						$target->setAttribute('graphviz.URL', $url);
 						$target->setAttribute('graphviz.target', '_parent');
-					}
+					} //elseif (!empty($V[$arrow->targetId]->innerNodesId)){
+					//	$newToUngroup =  $toUngroup . "{$arrow->targetId}_"; 
+					//	$url = $this->urlGenerator->generate(
+					//		'drawgraph',
+					//		['toUngroup' => $newToUngroup, 'startId' => $R ],
+					//		UrlGeneratorInterface::ABSOLUTE_URL
+					//	);
+					//	$target->setAttribute('graphviz.URL', $url);
+					//	$target->setAttribute('graphviz.target', '_parent');
+					//}
 					if (isset ($V[$arrow->targetId]->attributes['colorCode']) ) {
 						$cC = $V[$arrow->targetId]->attributes['colorCode'];
 						$target->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);	
@@ -249,7 +274,7 @@ class Profiler {
 				$edge = $this->graph->createEdgeDirected($source, $target);
 				if (isset($arrow->calls) && $arrow->calls !== 1) {	
 					$edge->setAttribute('graphviz.label', $arrow->calls); 
-				} 
+				}
 			}
 		}
 		$script = $this->graphviz->createScript($this->graph);
@@ -433,7 +458,8 @@ class Profiler {
 		return $id;
 	}
 
-	public function getSubGraph($startId, $arrows = null) {
+	public function getSubGraph($startId, $arrows = null) : array {
+		$startId ??= $this->rootId; 
 		$arrows ??= $this->arrowsActive;
 		$subArrows = [];
 		$subNodes  = [];
@@ -463,7 +489,7 @@ class Profiler {
 				array_pop($toProcess);
 			}
 		}
-		return [$subNodes, $subArrows];
+		return [$subNodes, $subArrows, $startId];
 	}
 
 	private function addGroup($group, $prefix, $label = null) {
