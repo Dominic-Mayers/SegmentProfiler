@@ -27,7 +27,7 @@ class SegmentProfilerController extends AbstractController {
 	
 	#[Route('/tree')]
 	public function showTree(Profiler $profiler): Response {
-        $profiler->createGraph();
+        $profiler->createGraphViz();
 		$svgHtml = $this->gv->createImageHtml($profiler->graph); 
 		return new Response(
             '<html><body>'.$svgHtml.'</body></html>'
@@ -44,7 +44,8 @@ class SegmentProfilerController extends AbstractController {
 			}
 		}
 		$profiler->setColorCode(); 
-        $profiler->createGraph($profiler->getSubGraph($startId), $color = false, $toUngroup);
+        $script = $profiler->createGraphViz($profiler->getSubGraph($startId), $color = false, $toUngroup);
+		file_put_contents('../output/mediawiki.dot', $script);
 		$svgHtml = $this->gv->createImageHtml($profiler->graph); 
 		return new Response(
             '<html><body>'.$svgHtml.'</body></html>'

@@ -40,7 +40,7 @@ class Profiler {
 	) {
 		$this->graphviz = new  GraphViz(); 
 	}
-
+	
 	private static function getGroupId($prefix) {
 		static $n = [];
 		$n[$prefix] ??= 1;
@@ -202,7 +202,7 @@ class Profiler {
 		}
 	}
 
-	public function createGraph($graphArr = null , $color=true, $toUngroup =  ''): string {
+	public function createGraphViz($graphArr = null , $color=true, $toUngroup =  ''): string {
 		$cM = $this->cM; 
 		$this->graph = new Graph();
 		[$V, $A, $R] = $graphArr ?? [$this->nodesActive, $this->arrowsActive, $this->rootId];
@@ -294,7 +294,7 @@ class Profiler {
 		}
 		$grTxt = isset($node->groupId) ? " in " . $node->groupId : "";
 		$name = $node->attributes['label']; 
-		return "$nodeId: $name$timeTxt$grTxt";
+		return "   $nodeId: $name$timeTxt$grTxt";
 	}
 	
 	private function visitNodes($beforeChildren = null, $afterChildren = null, $init = null, $finalize = null) {
@@ -425,25 +425,33 @@ class Profiler {
 			return;
 		}
 		$groups = [];
+		//$callsArr= []; 
 		$adj = $this->getNotInnerArrowsOut($currentId);
 		foreach ($adj as $targetId => $arrow) {
 			if (isset($this->nodes[$targetId]->groupId)) {
 				continue;
 			}
-			$childrenId = $this->notInnerChildrenNamesId($targetId);
-			if (empty($childrenId)) {
+			$childrenNames = $this->getChildrenNames($targetId);
+			if (empty($childrenNames)) {
 				continue;
 			}
+			$childrenId = implode('&', array_keys($childrenNames));
+			//$callsArr[$childrenId][] = $arrow->calls;
 			$groups[$childrenId][] = $targetId;
 		}
 		foreach ($groups as $childrenId => $group) {
 			if (count($group) > 1) {
-				$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN");
+				//$callsArr[$childrenId] = implode(':', $callsArr[$childrenId]); 
+				if (str_contains($childrenId, '&')) {
+					$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN");
+				} else {
+					$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN", $childrenId);
+				}
 			}
 		}
 	}
 
-	private function notInnerChildrenNamesId($nodeId) {
+	private function getChildrenNames($nodeId) {
 		$childrenNames = [];
 
 		$adj = $this->getNotInnerArrowsOut($nodeId);
@@ -451,11 +459,11 @@ class Profiler {
 			if (isset($this->nodes[$targetId]->groupId)) {
 				continue;
 			}
-			$childrenNames[] = $arrow->calls . "*" . $this->nodes[$targetId]->attributes['label'];
+			$childrenNames[$this->nodes[$targetId]->attributes['label']] ??= 0;
+			$childrenNames[$this->nodes[$targetId]->attributes['label']] += $arrow->calls;
 		}
-		sort($childrenNames);
-		$id = implode('&', $childrenNames);
-		return $id;
+		ksort ($childrenNames);
+		return $childrenNames;
 	}
 
 	public function getSubGraph($startId, $arrows = null) : array {
