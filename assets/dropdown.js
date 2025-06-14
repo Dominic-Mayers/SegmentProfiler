@@ -41,7 +41,7 @@ for (var node of nodes) {
 
 	const option0 = document.createElement("option");
 	option0.setAttribute('value', "");
-	option0.textContent='';
+	option0.textContent='Pick an action';
 	select.appendChild(option0);
 
 	var urlEls = node.getElementsByTagName('a');
@@ -52,6 +52,6 @@ for (var node of nodes) {
 		option1.setAttribute('value', url);
 		option1.textContent='Subgraph';
 		select.appendChild(option1);
-		//urlEl.remove();
+		urlEl.remove();
 	}
 }
