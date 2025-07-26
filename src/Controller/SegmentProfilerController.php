@@ -1,42 +1,41 @@
 <?php
 
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Scripting/EmptyPHP.php to edit this template
- */
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use App\Profiler;
 use Graphp\GraphViz\GraphViz; 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Asset\Packages; 
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 
 class SegmentProfilerController extends AbstractController {
 	
 	private GraphViz $gv;
 	private \SplFileObject $notesFile;
+        private Packages $packages;
 	
-	public function __construct(Profiler $profiler) {
+	public function __construct(Packages $packages) {
 		$this->gv = new GraphViz(); 
-		$this->gv->setFormat('svg'); 		
-		$this->notesFile = new \SplFileObject('../src/Fixtures/mediawiki.Segment.profile');
-		$profiler->getTree($this->notesFile);
-		$profiler->setExclusiveTime();
+		$this->gv->setFormat('svg');
+                $this->packages = $packages;
 	}
 	
-	#[Route('/tree')]
-	public function showTree(Profiler $profiler): Response {
-        $profiler->createGraphViz();
-		$svgHtml = $this->gv->createImageHtml($profiler->graph); 
-		return new Response(
-            '<html><body>'.$svgHtml.'</body></html>'
-        );
+	#[Route('/tree/{input}')]
+	public function showTree(Profiler $profiler, $input): Response {
+                $this->setTree($profiler, $input); 
+                $profiler->setColorCode();
+                $profiler->createGraphViz();
+                $svgHtml = $this->gv->createImageHtml($profiler->graph); 
+                return new Response(
+                    '<html><body>'.$svgHtml.'</body></html>'
+                );
 	}
-		
-	#[Route('/drawgraph/{startId}/{toUngroup}', name: 'drawgraph' )]
-	public function drawGraph(Profiler $profiler, $startId = null, $toUngroup = ""): Response {
-		$this->setDefaultGroups ($profiler);
+
+	#[Route('/drawgraph/{input}/{startId}/{toUngroup}', name: 'drawgraph' )]
+	public function drawGraph(Profiler $profiler, $input, $startId = null, $toUngroup = ""): Response {
+                set_time_limit(600); 
+		$this->setDefaultGroups ($profiler, $input);
 		if ( !empty($toUngroup) ) {
 			$toUngroupArr = explode("_", substr($toUngroup, 0, -1));
 			foreach($toUngroupArr as $groupId) {
@@ -44,19 +43,33 @@ class SegmentProfilerController extends AbstractController {
 			}
 		}
 		$profiler->setColorCode(); 
-        $script = $profiler->createGraphViz($profiler->getSubGraph($startId), $color = false, $toUngroup);
-		file_put_contents('../output/mediawiki.dot', $script);
-		$svgHtml = $this->gv->createImageHtml($profiler->graph); 
+                $script = $profiler->createGraphViz($input, $profiler->getSubGraph($startId), $color = false, $toUngroup);
+		$svgHtml = $this->gv->createImageData($profiler->graph);
+                $url = "/js/dropdown.js"; //$this->packages->getUrl('js/dropdown.js');
 		return new Response(
-            '<html><body>'.$svgHtml.'</body></html>'
-        );
+                    '<!DOCTYPE html><html><head><script src='.$url.' defer ></script></head><body>'.$svgHtml.'</body></html>'
+                );
 	}
 
-	private function setDefaultGroups (Profiler $profiler) {
-		$profiler->fullGroupSiblingsPerName();
+	private function setTree (Profiler $profiler, $input) {
+		$this->notesFile = new \SplFileObject('../src/Fixtures/'.$input.'.profile');
+        	$profiler->getTree($this->notesFile);
+		//$profiler->setExclusiveTime();
+        }
+
+	private function setDefaultGroups (Profiler $profiler, $input) {
+                $filenameTotal  = '../input/Graphs/'.$input.'.totgraph'; 
+                $filenameActive = '../input/Graphs/'.$input.'.actgraph'; 
+                if (file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
+                    $profiler->restoreGraphFromFile($filenameTotal,  false);
+                    $profiler->restoreGraphFromFile($filenameActive, true);
+                    return;
+                }
+                $this->setTree($profiler, $input);
+                $profiler->fullGroupSiblingsPerName();
+                $profiler->groupSiblingsPerChildrenName();
 		$profiler->groupDescendentsPerName();
-		$profiler->groupSiblingsPerChildrenName();
-		$profiler->fullGroupSiblingsPerName();
+                $profiler->saveGraphInFile('../input/Graphs/'.$input.'.totgraph', false); 
+                $profiler->saveGraphInFile('../input/Graphs/'.$input.'.actgraph', true); 
 	}
-	
 }

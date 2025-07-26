@@ -1,31 +1,41 @@
 <?php
 namespace App\Command;
 
-require_once ('vendor/autoload.php');
-
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Console\Input\InputInterface;
+//use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputArgument;
 
-#[AsCommand(name: 'app:initGraph')]
-class InitGraphCommand {
-    
+#[AsCommand(name: 'app:init-graph')]
+class InitGraphCommand extends Command{
+   
     public function __construct(
-        private UrlGeneratorInterface $urlGenerator,
-        private EntityManagerInterface $entityMagager,
-    ) {    
+		private UrlGeneratorInterface $urlGenerator,
+                private EntityManagerInterface $entityManager,
+    ) {
+        parent::__construct(); 
     }
     
-    public function __invoke(): int {
-        $input = $argv[1]; 
-        $notesFile = new SplFileObject('src/Fixtures/'.$input.'.profile');
-        $profiler = new \App\Profiler($this->urlGenerator, $this->entityManager);
+    protected function configure(): void
+    {
+        $this->addArgument('profileName', InputArgument::REQUIRED);
+    }
+    
+    public function __invoke(InputInterface $input): int {
+        $profileName = $input->getArgument('profileName'); 
+        $notesFile = new \SplFileObject(__DIR__.'/../Fixtures/'.$profileName.'.profile');
+        $profiler = new \App\Profiler($this->urlGenerator, $this->entityManager,);
         $profiler->getTree($notesFile);
         $profiler->setExclusiveTime();
         $profiler->setColorCode();
-        file_put_contents('output/tree.dot', $profiler->createGraphViz($input));
-
+        $dot = $profiler->createGraphViz($profileName); 
+        file_put_contents(__DIR__.'/../../output/'.$profileName.'_tree.dot', $dot);
+        echo $dot; 
+        return Command::SUCCESS;
+        
         //$profiler->groupDescendentsPerName();
         //$dot = $profiler->createDot([]);
         //file_put_contents('output/dn.dot', $dot);
@@ -46,5 +56,6 @@ class InitGraphCommand {
         file_put_contents('output/active.dot', $profiler->createGraphViz());
 
         file_put_contents('output/sub.dot', $profiler->createGraphViz($profiler->getSubGraph('DN00001')));
+        return Command::SUCCESS;
     }
 }

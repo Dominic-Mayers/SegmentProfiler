@@ -11,22 +11,24 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\PrettyPrinter;
 
 $parser = (new ParserFactory())->createForNewestSupportedVersion();  
-if (file_exists($argv[1])) {
-	$code = file_get_contents($argv[1]);
-} else {
+if (isset($argv[1]) && file_exists($argv[1])) {
+    $code = file_get_contents($argv[1]);
+} elseif (isset($argv[1])) {
     echo $argv[1]. " not found.".PHP_EOL;
     exit(); 
+} else {
+    echo "No file provided.".PHP_EOL;
+    exit();     
 }
 
 $stmtcode = <<<'STATEMENTS'
 <?php
-global $stringAction;
-$scriptStartId = getId();
-$stringAction .= $scriptStartId.":node:startName=".explode('::',__METHOD__)[1].PHP_EOL;
-$stringAction .= $scriptStartId.":node:endName=none".PHP_EOL;
+$scriptStartId = Note::getId();
+Note::$segmentNotes .= $scriptStartId.":node:startName=".explode('::',__METHOD__)[1].PHP_EOL;
+Note::$segmentNotes .= $scriptStartId.":node:endName=none".PHP_EOL;
 $scriptTimeFct[$scriptStartId] = -hrtime(true);
 $scriptTimeFct[$scriptStartId] += hrtime(true);
-$stringAction .= $scriptStartId . ":group:timeFct={$scriptTimeFct[$scriptStartId]}" . PHP_EOL;
+Note::$segmentNotes .= $scriptStartId . ":group:timeFct={$scriptTimeFct[$scriptStartId]}" . PHP_EOL;
 STATEMENTS;
 
 try {
@@ -49,19 +51,17 @@ class Visitor extends NodeVisitorAbstract {
 	}
 	
 	public function leaveNode(Node $node) {
-		$stmtGlobal		= $this->stmtast[0];
-		$stmtGetId		= $this->stmtast[1];
-		$stmtStartName	= $this->stmtast[2];
-		$stmtEndName	= $this->stmtast[3];
-		$stmtTimeInit	= $this->stmtast[4];
-		$stmtTimeSet	= $this->stmtast[5];
-		$stmtTimeFct	= $this->stmtast[6];
+		$stmtGetId	= $this->stmtast[0];
+		$stmtStartName	= $this->stmtast[1];
+		$stmtEndName	= $this->stmtast[2];
+		$stmtTimeInit	= $this->stmtast[3];
+		$stmtTimeSet	= $this->stmtast[4];
+		$stmtTimeFct	= $this->stmtast[5];
 		
 		if ($node instanceof ClassMethod && is_array($node->stmts)) {
 			array_unshift($node->stmts , $stmtTimeInit);  
 			array_unshift($node->stmts , $stmtStartName);  
 			array_unshift($node->stmts , $stmtGetId);
-			array_unshift($node->stmts , $stmtGlobal);
 			$node->stmts[] = $stmtTimeSet;
 			$node->stmts[] = $stmtTimeFct;
 			$node->stmts[] = $stmtEndName;

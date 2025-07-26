@@ -24,3 +24,7 @@ output/*
 nbproject/
 notes_on*
 composer.lock
+**.orig
+public/phpinfo.php
+input/*
+src/Fixtures/*
