@@ -1,9 +1,6 @@
 <?php
 namespace App;
 
-use App\Entity\Node;
-use App\Entity\Label;
-use App\Entity\Arrow;
 use Graphp\GraphViz\GraphViz; 
 use Graphp\Graph\Graph;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,7 +28,8 @@ class Profiler {
         private string $rootId = "00000";
         private bool $changeSinceLastSet = false; 
         public ActiveGraph $activeGraph;
-        public TotalGraph $totalGraph;        
+        public TotalGraph $totalGraph;
+        private array $doNotDelete  = []; 
         private array $groupsPhase0 = [];
 	private array $groupsPhase1 = [];
         private array $grpTraversalKey = []; 
@@ -55,62 +53,19 @@ class Profiler {
 	}
 
 	public function getTree(\Iterator $notesFile, ) {
-                // Empty all tables. With getTree. it is assumed we start from scratch.
-                $connection = $this->entityManager->getConnection();
-                $schemaManager = $connection->getSchemaManager();
-                $tables = $schemaManager->listTables();
-                $query = 'SET FOREIGN_KEY_CHECKS = 0;';
-
-                foreach($tables as $table) {
-                    $name = $table->getName();
-                    $query .= 'TRUNCATE ' . $name . ';';
-                }
-                $connection->executeQuery($query, array(), array());
-                
                 // Create the root.
 		$currentId = $this->rootId;
-		$currentNode = $this->totalGraph->nodes[$currentId] = new \App\Node();
+		$currentNode = $this->totalGraph->nodes[$currentId] = new Node('T');
 		$currentNode->attributes['nodeId'] = $currentId;
 		$currentNode->attributes['parentId'] = null;
 		$currentNode->attributes['startName'] = 'root';
 		$currentNode->attributes['label'] = 'root';                
                 
-                //$curNode = new Node(); 
-                //$curNode->setNodeId($currentId);
                 
-                //$labelNodeId = new Label();
-                //$labelNodeId->setNode($curNode)
-                //      ->setKeyLabel('nodeId')
-                //      ->setValueLabel($currentId);
-                //$this->entityManager->persist($labelNodeId);
-                //$labelParentId = new Label();
-                //$labelParentId->setNode($curNode)
-                //      ->setKeyLabel('parentId')
-                //      ->setValueLabel(null);
-                //$this->entityManager->persist($labelParentId);
-                //$labelStartName = new Label();
-                //$labelStartName->setNode($curNode)
-                //      ->setKeyLabel('startName')
-                //      ->setValueLabel('root');
-                //$this->entityManager->persist($labelStartName);
-                //$labelLabel = new Label();
-                //$labelLabel->setNode($curNode)
-                //      ->setKeyLabel('label')
-                //      ->setValueLabel('root');
-                
-                // End currentNode as root
-                //$n= 6; 
 		foreach ($notesFile as $note) {
 			if ( empty (trim ($note))) { continue;}
-                        // This is going to be a new currentNode. 
-                        //$n++;
-                        //if ($n % 1000 === 0) {
-                        //        echo $n/1000 . 'K'. PHP_EOL;
-                        //}
 
 			$res = $this->processNote($currentId, $currentNode,  $note);
-                        //$this->entityManager->persist($labelLabel);
-                        //$this->entityManager->persist($curNode);
                         
 			if ($res === "StopRoot") {
 				break;
@@ -120,10 +75,6 @@ class Profiler {
 		$this->activeGraph->arrowsOut = $this->totalGraph->arrowsOut;
 		$this->activeGraph->arrowsIn = $this->totalGraph->arrowsIn;
 		$this->activeGraph->nodes = $this->totalGraph->nodes;
-                //$this->entityManager->persist($labelLabel);
-                //$this->entityManager->persist($curNode);
-                
-                //$this->entityManager->flush();
 	}
 
 	private function processNote(&$currentId, &$currentNode, $note) {
@@ -139,52 +90,17 @@ class Profiler {
 		$key = $midKeyArr[1];
 
 		if ($midKey == "node:startName") {
-			$newArrow = new \App\Arrow($currentId, $nodeId);
-                        //$arrow = new Arrow();
-                        //$arrow->setSource($curNode); // We don't have the new curNode yet.
-                   
+			$newArrow = new Arrow($currentId, $nodeId);                   
 			$this->totalGraph->arrowsOut[$currentId][$nodeId] = $newArrow;
 			$this->totalGraph->arrowsIn[$nodeId][$currentId] = $newArrow;
                         
                         // This is the new currentNode !
-			$currentNode = new \App\Node();
+			$currentNode = new Node('T');
 			$currentNode->attributes['parentId'] = $currentId;
 			$currentNode->attributes['startName'] = $value;
 			$currentNode->attributes['label'] = $value;
 			$currentNode->attributes['nodeId'] = $nodeId;
-                        
-                        //$curNode = new Node();
-                        //$curNode->setNodeId($nodeId);
-                        //$this->entityManager->persist($curNode);
-                        
-                        //$arrow->setTarget($curNode)
-                        //      ->setCalls(1);
-                        //$this->entityManager->persist($arrow);
-                              
-                        //$labelNodeId = new Label();
-                        //$labelNodeId->setKeyLabel('nodeId')
-                        //    ->setValueLabel($nodeId)
-                        //    ->setNode($curNode);
-                        //$this->entityManager->persist($labelNodeId);
-                        
-                        //$labelParentId = new Label();
-                        //$labelParentId->setKeyLabel('parentId')
-                        //    ->setValueLabel($currentId)
-                        //    ->setNode($curNode);
-                        //$this->entityManager->persist($labelParentId);
-                        
-                        //$labelStartName = new Label();
-                        //$labelStartName->setKeyLabel('startName')
-                        //    ->setValueLabel($value)
-                        //    ->setNode($curNode);
-                        //$this->entityManager->persist($labelStartName);
-                        
-                        //$labelLabel = new Label();
-                        //$labelLabel->setKeyLabel('label')
-                        //    ->setValueLabel($value)
-                        //    ->setNode($curNode);
-                        //$this->entityManager->persist($labelLabel);
-                        
+                                                
 			//echo "New currentId $nodeId with parentId $currentId.".PHP_EOL;
 			$currentId = $nodeId;
 			$this->totalGraph->nodes[$currentId] = $currentNode;
@@ -198,48 +114,17 @@ class Profiler {
 				echo "Stopping node $currentId by its parent "; 
 				$currentNode->attributes['stoppedByParent'] = true;
 				$currentNode->attributes['endName'] = 'none';
-                                
-                                //$labelStop = new Label();
-                                //$labelStop
-                                //      ->setKeyLabel('stoppedByParent')
-                                //      ->setValueLabel(true)
-                                //      ->setNode($curNode);
-                                //$this->entityManager->persist($labelStop);
-
-                                //$labelEndName = new Label();
-                                //$labelEndName
-                                //      ->setKeyLabel('endName')
-                                //      ->setValueLabel('none')
-                                //      ->setNode($curNode);
-                                //$this->entityManager->persist($labelEndName);
-                                
+                                                                
 				$currentId = $currentNode->attributes['parentId'];
 				$currentNode = $this->totalGraph->nodes[$currentId];
 				echo "$currentId, which is now the new currentId. <br>".PHP_EOL;
 			}
 			$currentNode->attributes[$key] = $value;
-                        //$label = new Label();
-                        //$label->setKeyLabel($key)
-                        //      ->setValueLabel($value)
-                        //      ->setNode($curNode);
-                        //$this->entityManager->persist($label);                        
 			//echo "Set group:$key = $value".PHP_EOL;
 			if ($midKey === "node:endName") {
 				$newvalue = $currentNode->attributes['label'] .= "_$value";
-                                //$labelLabel->setValueLabel($newvalue);
-                                //$this->entityManager->persist($labelLabel);                        
                                 $this->setExclusiveTimeOfNode($currentId); 
 				$currentId = $currentNode->attributes['parentId'];
-			        //$batchSize = 8000;
-			        //self::$nEnd++; 
-	    	                //if (self::$nEnd % $batchSize === 0) {
-                                    // This flush takes a lot of time. 
-                                    //$this->entityManager->flush();
-                                //}
-	    	                //if (self::$nEnd % $batchSize === 4000) {
-                                    // This clear is needed to save space, but it sometimes delete needed entities (sources). 
-                                    //$this->entityManager->clear();
-                                //}
 				if (!empty($currentId)) {
 					$currentNode = $this->totalGraph->nodes[$currentId];
 					//echo "Moving to parent $currentId after endName".PHP_EOL;
@@ -269,17 +154,7 @@ class Profiler {
 	    }
 	}
 
-/*	public function setExclusiveTime() {
-		// To be executed on the tree only.
-		// When grouping, the exclusive time and the inclusive time are additive.
-		$nodes = $this->activeGraph->nodes;
-		$arrows = $this->activeGraph->arrowsOut;
-		foreach ($nodes as $nodeId => $node) {
-                    $this->setExclusiveTimeOfNode($nodeId);
-		}
-	}
-*/
-	public function setColorCode( $nodes = null ) {
+        public function setColorCode( $nodes = null ) {
 		// To be executed on the active graph or active subgraph. 
 		
 		$cM = $this->cM;
@@ -429,16 +304,7 @@ class Profiler {
 						);
 						$target->setAttribute('graphviz.URL', $url);
 						$target->setAttribute('graphviz.target', '_parent');
-					} //elseif (!empty($V[$arrow->targetId]->innerNodesId)){
-					//	$newToUngroup =  $toUngroup . "{$arrow->targetId}_"; 
-					//	$url = $this->urlGenerator->generate(
-					//		'drawgraph',
-					//		['toUngroup' => $newToUngroup, 'startId' => $R ],
-					//		UrlGeneratorInterface::ABSOLUTE_URL
-					//	);
-					//	$target->setAttribute('graphviz.URL', $url);
-					//	$target->setAttribute('graphviz.target', '_parent');
-					//}
+					} 
 					if (isset ($V[$arrow->targetId]->attributes['colorCode']) ) {
 						$cC = $V[$arrow->targetId]->attributes['colorCode'];
 						$target->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);	
@@ -462,16 +328,18 @@ class Profiler {
 		$node = $this->totalGraph->nodes[$nodeId]; 
 		if ( isset($node->attributes['timeExclusive'] ) ) {
 			$excTime = $node->attributes['timeExclusive'];
-			$excTimeInMillisec = number_format($excTime / 1E+6, 1);
+			$excTimeInMillisec = number_format($excTime / 1E+6, 3);
 			$incTime = $node->attributes['timeFct'];
-			$incTimeInMillisec = number_format($incTime / 1E+6, 1);
+			$incTimeInMillisec = number_format($incTime / 1E+6, 3);
 			$timeTxt = "($excTimeInMillisec, $incTimeInMillisec)";  
 		} else {
 			$timeTxt = "";
 		}
-		$grTxt = isset($node->groupId) ? " in " . $node->groupId : "";
-		$name = $node->attributes['label']; 
-		return "   $nodeId: $name$timeTxt$grTxt";
+		$label = $node->attributes['label'];
+                if (strlen($label) > 130) {
+                    $label = substr($label, 0, 130) . "... truncated "; 
+                }
+		return "   $nodeId: $label$timeTxt";
 	}
 	      
 	private function visitNodes($beforeChildren = null, $afterChildren = null, $init = null, $finalize = null) {
@@ -513,6 +381,8 @@ class Profiler {
 	}
 
 	private function getNotInnerArrowsOut($nodeId) {
+                // This is the same as using the active graph in its original definition, just
+                // after the creation of the existing groups, but not after group desactivations.
 		$adjNotInner = [];
 		$adjAll = $this->totalGraph->arrowsOut[$nodeId] ?? [];
 		foreach ($adjAll as $targetId => $arrow) {
@@ -526,10 +396,14 @@ class Profiler {
 	public function groupDescendentsPerName() {
 		$this->visitNodes([$this, 'beforeChildren_dn'], [$this, 'afterChildren_dn'], [$this, 'init_dn']);
 		$this->createActiveGroups();
+                //echo PHP_EOL; 
 	}
 
         private function init_dn () {
+            $this->groupsPhase1 = []; 
             $this->changeSinceLastSet = false; 
+            $this->doNotDelete = [];
+            //echo "Starting DN".PHP_EOL."-----------".PHP_EOL;
         }
 
 	private function beforeChildren_dn($currentId) {
@@ -537,6 +411,19 @@ class Profiler {
 		$currentNode = $this->totalGraph->nodes[$currentId];
 		$label = $currentNode->attributes['label'];
 		$grps0[$label][] = $currentId;
+                if (count ($grps0[$label]) == 2 ) {
+                    //echo "Added node $currentId with label $label to a DN or DNX group, after {$grps0[$label][0]}".PHP_EOL;
+                }
+                if (count ($grps0[$label]) > 2 ) {
+                    //echo "Added node $currentId with label $label to a DN or DNX group".PHP_EOL;
+                }
+                if (
+                    $this->totalGraph->nodes[$currentId]->type !== "SN" && 
+                    $this->totalGraph->nodes[$currentId]->type !== "DN" &&
+                    $this->totalGraph->nodes[$currentId]->type !== "T" )
+                {
+                    $this->doNotDelete[$label] = true;     
+                }
 	}
 
 	public function afterChildren_dn($currentId) {
@@ -551,10 +438,12 @@ class Profiler {
 		$firstInnerNodeId = $grps0[$label][0];
 		if ($firstInnerNodeId === $currentId) {
 			if (isset($grps0[$label][1])) {
-				$grps1[] = $this->addGroup($grps0[$label], "DN", $label); 
+                                $type = isset($this->doNotDelete[$label]) && $this->doNotDelete[$label] ? "DNX" : "DN"; 
+ 				$grps1[] = $groupId = $this->addGroup($grps0[$label], $type, $label); 
                                 $this->changeSinceLastSet = true;
                         }
 			unset($grps0[$label]);
+                        unset($this->doNotDelete[$label]);
 		}
 	}
 
@@ -567,22 +456,36 @@ class Profiler {
 	private function init_sn() {
                 $this->changeSinceLastSet = false; 
 		$this->groupsPhase1 = [];
+                //echo "Starting SN".PHP_EOL."-----------".PHP_EOL;
 	}
 
 	private function beforeChildren_sn($currentId) {
 		$groups = [];
 		$adj = $this->getNotInnerArrowsOut($currentId); 
+                $type = "SN"; 
 		foreach ($adj as $targetId => $arrow) {
                         if (count($this->activeGraph->arrowsIn[$targetId]) > 1) {continue;}
 			$label = $this->totalGraph->nodes[$targetId]->attributes['label'];
-                        //echo "Add $targetId to $label".PHP_EOL; 
+                        if (
+                            $this->totalGraph->nodes[$targetId]->type !== "SN" && 
+                            $this->totalGraph->nodes[$targetId]->type !== "DN" &&
+                            $this->totalGraph->nodes[$targetId]->type !== "T" )
+                        {
+                            $type = "SNX";     
+                        }
 			$groups[$label][] = $targetId;
+                        if (count($groups[$label]) == 2) {
+                            //echo "Added node $targetId to a group with label $label, after {$groups[$label][0]}".PHP_EOL;
+                        }
+                        if (count($groups[$label]) > 2) {
+                            //echo "Added node $targetId to a group with label $label".PHP_EOL;
+                        }                        
 		}
 		foreach ($groups as $label => $group) {
                     if (count($group) > 1) {
-			$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SN", $label);
+			$this->groupsPhase1[] = $groupId = $this->addGroup($group, $type, $label);
                         $this->changeSinceLastSet = true;                         
-                        //echo "Add new group $groupId".PHP_EOL; 
+                        //echo "Added new group $groupId".PHP_EOL; 
                     }
 		}
 	}
@@ -591,6 +494,7 @@ class Profiler {
 		while (true) {
 			$this->groupSiblingsPerName();
 			if (!$this->changeSinceLastSet) {
+                                //echo "No group created".PHP_EOL. PHP_EOL; 
 				break;
 			}
 		}
@@ -598,8 +502,10 @@ class Profiler {
 
 	public function groupSiblingsPerChildrenName() {
 		// For every non innernode, this only groups its non inner children with a same full name.
+                //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL; 
 		$this->visitNodes([$this, 'beforeChildren_scn'], null, [$this, 'init_scn']);
 		$this->createActiveGroups();
+                //echo PHP_EOL; 
 	}
 
 	private function init_scn() {
@@ -614,23 +520,28 @@ class Profiler {
                         if (count($this->totalGraph->arrowsIn[$targetId]) > 1) {
                             continue;
                         }
-			$childrenNames = $this->getChildrenNames($targetId);
-			if (empty($childrenNames)) {
+			$adjacentNames = $this->getAdjacentNames($targetId);
+			if (empty($adjacentNames)) {
 				continue;
 			}
-			$childrenLabel = implode('&', array_keys($childrenNames));
-			$groups[$childrenLabel][] = $targetId;
+			$label = "Parents of ". implode('&', array_keys($adjacentNames));
+			$groups[$label][] = $targetId;
+                        if (count($groups[$label]) == 2) {
+                            //echo "Added node $targetId to a group with label $label, after {$groups[$label][0]}".PHP_EOL;
+                        }
+                        if (count($groups[$label]) > 2) {
+                            //echo "Added node $targetId to a group with label $label".PHP_EOL;
+                        }                        
 		}
-		foreach ($groups as $childrenlabel => $group) {
+		foreach ($groups as $label => $group) {
 			if (count($group) > 1) {
-                                // We ignore the label created to partition the groups, because potentially big.
-				$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN");
+				$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN", $label);
                                 $this->changeSinceLastSet = true;
 			}
 		}
 	}
 
-	private function getChildrenNames($nodeId) {
+	private function getAdjacentNames($nodeId) {
 		$childrenNames = [];
 
 		$adj = $this->getNotInnerArrowsOut($nodeId);
@@ -679,7 +590,7 @@ class Profiler {
 		return [$subNodes, $subArrows, $startId];
 	}
 
-	private function addGroup($group, $prefix, $label = null) {
+	private function addGroup($group, $type, $label) {
                 if ( count($group) == 1)  {
                         // Singleton are represented by their inner node
                         $groupId = $group[0];
@@ -687,12 +598,13 @@ class Profiler {
                             echo "Warning: resetting groupId of innernode of singleton $groupId"; 
                             $this->totalGraph->nodes[$groupId]->groupId = null; 
                         }
+                        //echo "Taking $groupId as a singleton".PHP_EOL; 
                         return $groupId;  
                 }
-		$groupId = self::getGroupId($prefix);
-		$this->totalGraph->nodes[$groupId] = new \App\Node();
+		$groupId = self::getGroupId($type);
+		$this->totalGraph->nodes[$groupId] = new Node($type);
 		$this->totalGraph->nodes[$groupId]->attributes['nodeId'] = $groupId;
-		$this->totalGraph->nodes[$groupId]->attributes['label'] = $label ?? $groupId;
+		$this->totalGraph->nodes[$groupId]->attributes['label'] = $label;
 
 		$this->totalGraph->nodes[$groupId]->attributes['timeFct'] = 0;
 		$this->totalGraph->nodes[$groupId]->attributes['timeExclusive'] = 0; 
@@ -701,7 +613,8 @@ class Profiler {
 			$this->totalGraph->nodes[$groupId]->innerNodesId[] = $innernodeId;
 			$this->totalGraph->nodes[$groupId]->attributes['timeFct']       += $this->totalGraph->nodes[$innernodeId]->attributes['timeFct'];
 			$this->totalGraph->nodes[$groupId]->attributes['timeExclusive'] += $this->totalGraph->nodes[$innernodeId]->attributes['timeExclusive'];
-                } 
+                }
+                //echo "Added group $groupId with label $label".PHP_EOL; 
 		return $groupId;
 	}
 
@@ -723,14 +636,16 @@ class Profiler {
 		foreach ($innerNodesId as $nodeId) {
 			$arrowsOut = $this->totalGraph->arrowsOut[$nodeId] ?? [];
 			foreach ($arrowsOut as $targetId => $arrowOut) {
-				$this->totalGraph->arrowsOut[$groupId][$targetId] ??= new \App\Arrow($groupId, $targetId, 0);
+				$this->totalGraph->arrowsOut[$groupId][$targetId] ??= new Arrow($groupId, $targetId, 0);
 				$this->totalGraph->arrowsOut[$groupId][$targetId]->calls += $arrowOut->calls;
+                                //echo "Adding {$arrowOut->calls} to arrow from $groupId to $targetId because of $nodeId".PHP_EOL; 
 				$this->totalGraph->arrowsIn[$targetId][$groupId] = $this->totalGraph->arrowsOut[$groupId][$targetId];
 			}
 			$arrowsIn = $this->totalGraph->arrowsIn[$nodeId] ?? [];
 			foreach ($arrowsIn as $sourceId => $arrowIn) {
-				$this->totalGraph->arrowsOut[$sourceId][$groupId] ??= new \App\Arrow($sourceId, $groupId, 0);
+				$this->totalGraph->arrowsOut[$sourceId][$groupId] ??= new Arrow($sourceId, $groupId, 0);
 				$this->totalGraph->arrowsOut[$sourceId][$groupId]->calls += $arrowIn->calls;
+                                //echo "Adding {$arrowIn->calls} to arrow from $sourceId to $groupId because of $nodeId".PHP_EOL; 
 				$this->totalGraph->arrowsIn[$groupId][$sourceId] = $this->totalGraph->arrowsOut[$sourceId][$groupId];
 			}
 		}
