@@ -60,7 +60,7 @@ class SegmentProfilerController extends AbstractController {
 	private function setDefaultGroups (Profiler $profiler, $input) {
                 $filenameTotal  = '../input/Graphs/'.$input.'.totgraph'; 
                 $filenameActive = '../input/Graphs/'.$input.'.actgraph'; 
-                if (file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
+                if (false && file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
                     $profiler->restoreGraphFromFile($filenameTotal,  false);
                     $profiler->restoreGraphFromFile($filenameActive, true);
                     return;
