@@ -60,7 +60,7 @@ class SegmentProfilerController extends AbstractController {
 	private function setDefaultGroups (Profiler $profiler, $input) {
                 $filenameTotal  = '../input/Graphs/'.$input.'.totgraph'; 
                 $filenameActive = '../input/Graphs/'.$input.'.actgraph'; 
-                if (false && file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
+                if (file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
                     $profiler->restoreGraphFromFile($filenameTotal,  false);
                     $profiler->restoreGraphFromFile($filenameActive, true);
                     return;
@@ -70,6 +70,8 @@ class SegmentProfilerController extends AbstractController {
                 $profiler->groupSiblingsPerChildrenName();
                 $profiler->groupSiblingsPerName();
 		$profiler->groupDescendentsPerName();
+                
+                $profiler->createDefaultActiveGraph(); 
                 
                 $profiler->saveGraphInFile('../input/Graphs/'.$input.'.totgraph', false); 
                 $profiler->saveGraphInFile('../input/Graphs/'.$input.'.actgraph', true); 

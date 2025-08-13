@@ -26,7 +26,7 @@ class Profiler {
 	]; 
 
         private string $rootId = "00000";
-        private bool $changeSinceLastSet = false; 
+        private bool $newNonSingletonSinceLastSet = false; 
         public ActiveGraph $activeGraph;
         public TotalGraph $totalGraph;
         private array $doNotDelete  = []; 
@@ -46,15 +46,9 @@ class Profiler {
                 $this->totalGraph  = new TotalGraph();
 	}
 	
-	private static function getGroupId($prefix) {
-		static $n = [];
-		$n[$prefix] ??= 1;
-		return $prefix . str_pad($n[$prefix]++, 5, '0', STR_PAD_LEFT);
-	}
-
 	public function getTree(\Iterator $notesFile, ) {
                 // Create the root.
-		$currentId = $this->rootId;
+		$currentId = $this->totalGraph->rootId;
 		$currentNode = $this->totalGraph->nodes[$currentId] = new Node('T');
 		$currentNode->attributes['nodeId'] = $currentId;
 		$currentNode->attributes['parentId'] = null;
@@ -71,7 +65,7 @@ class Profiler {
 				break;
 			}
 		}
-		$this->processNote($currentId, $currentNode, $this->rootId . ":node:endName=none");
+		$this->processNote($currentId, $currentNode, $this->totalGraph->rootId . ":node:endName=none");
 		$this->activeGraph->arrowsOut = $this->totalGraph->arrowsOut;
 		$this->activeGraph->arrowsIn = $this->totalGraph->arrowsIn;
 		$this->activeGraph->nodes = $this->totalGraph->nodes;
@@ -254,10 +248,44 @@ class Profiler {
             $gr->arrowsOut = $arrowsOut;
         }
         
+	public function getSubGraph($startId, $arrows = null) : array {
+		$startId ??= $this->totalGraph->rootId; 
+		$arrows ??= $this->activeGraph->arrowsOut;
+		$subArrows = [];
+		$subNodes  = [];
+		$toProcess = [$startId];
+		$subNodes[$startId] = $this->activeGraph->nodes[$startId];
+		$visited = [];
+		while (true) {
+			if ($toProcess == []) {
+				break;
+			}
+
+			$currentId = end($toProcess);
+
+			If (!isset($visited[$currentId]) || !$visited[$currentId]) {
+				$visited[$currentId] = true;
+				$adj = $arrows[$currentId] ?? [];
+				foreach ($adj as $targetId => $arrow) {
+					$subArrows[$currentId][$targetId] = $arrow;
+					if (
+						!isset($visited[$targetId]) || !$visited[$currentId]
+					) {
+						$toProcess[] = $targetId;
+						$subNodes[$targetId] = $this->activeGraph->nodes[$targetId];
+					}
+				}
+			} else {
+				array_pop($toProcess);
+			}
+		}
+		return [$subNodes, $subArrows, $startId];
+	}
+
 	public function createGraphViz($input = 'input', $graphArr = null , $color=true, $toUngroup =  ''): string {
 		$cM = $this->cM; 
 		$this->graph = new Graph();
-		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->rootId];
+		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId];
 		if ($color) {
 			$this->setColorCode($V);
 		}
@@ -324,7 +352,7 @@ class Profiler {
 		return $script; 
 	}
 
-	private function getVizLabel($nodeId) {
+        private function getVizLabel($nodeId) {
 		$node = $this->totalGraph->nodes[$nodeId]; 
 		if ( isset($node->attributes['timeExclusive'] ) ) {
 			$excTime = $node->attributes['timeExclusive'];
@@ -341,320 +369,56 @@ class Profiler {
                 }
 		return "   $nodeId: $label$timeTxt";
 	}
-	      
-	private function visitNodes($beforeChildren = null, $afterChildren = null, $init = null, $finalize = null) {
-		isset($init) && $init();
-		$toProcess = [$this->rootId];
-		$visited = [];
-		while (true) {
-
-			if ($toProcess == []) {
-				break;
-			}
-
-			$currentId = end($toProcess);
-			$currentNode = $this->totalGraph->nodes[$currentId];
-
-			if ($currentNode->groupId) {
-				$visited[$currentId] = true;
-				array_pop($toProcess);
-				continue;
-			}
-
-			If (!isset($visited[$currentId]) || !$visited[$currentId]) {
-				isset($beforeChildren) && $beforeChildren($currentId);
-				$visited[$currentId] = true;
-				$adj = $this->getNotInnerArrowsOut($currentId);
-				foreach ($adj as $targetId => $arrow) {
-					if (
-						!isset($visited[$targetId]) || !$visited[$currentId]
-					) {
-						$toProcess[] = $targetId;
-					}
-				}
-			} else {
-				isset($afterChildren) && $afterChildren($currentId);
-				array_pop($toProcess);
-			}
-		}
-		isset($finalize) && $finalize();
-	}
-
-	private function getNotInnerArrowsOut($nodeId) {
-                // This is the same as using the active graph in its original definition, just
-                // after the creation of the existing groups, but not after group desactivations.
-		$adjNotInner = [];
-		$adjAll = $this->totalGraph->arrowsOut[$nodeId] ?? [];
-		foreach ($adjAll as $targetId => $arrow) {
-			if ( $this->totalGraph->nodes[$targetId]->groupId === null ) {
-				$adjNotInner[$targetId] = $arrow;
-			}
-		}
-		return $adjNotInner;
-	}
-
-	public function groupDescendentsPerName() {
-		$this->visitNodes([$this, 'beforeChildren_dn'], [$this, 'afterChildren_dn'], [$this, 'init_dn']);
-		$this->createActiveGroups();
-                //echo PHP_EOL; 
-	}
-
-        private function init_dn () {
-            $this->groupsPhase1 = []; 
-            $this->changeSinceLastSet = false; 
-            $this->doNotDelete = [];
-            //echo "Starting DN".PHP_EOL."-----------".PHP_EOL;
-        }
-
-	private function beforeChildren_dn($currentId) {
-		$grps0 =& $this->groupsPhase0;
-		$currentNode = $this->totalGraph->nodes[$currentId];
-		$label = $currentNode->attributes['label'];
-		$grps0[$label][] = $currentId;
-                if (count ($grps0[$label]) == 2 ) {
-                    //echo "Added node $currentId with label $label to a DN or DNX group, after {$grps0[$label][0]}".PHP_EOL;
-                }
-                if (count ($grps0[$label]) > 2 ) {
-                    //echo "Added node $currentId with label $label to a DN or DNX group".PHP_EOL;
-                }
-                if (
-                    $this->totalGraph->nodes[$currentId]->type !== "SN" && 
-                    $this->totalGraph->nodes[$currentId]->type !== "DN" &&
-                    $this->totalGraph->nodes[$currentId]->type !== "T" )
-                {
-                    $this->doNotDelete[$label] = true;     
-                }
-	}
-
-	public function afterChildren_dn($currentId) {
-		$grps0 = & $this->groupsPhase0;
-		$grps1 = & $this->groupsPhase1;
-		$currentNode = $this->totalGraph->nodes[$currentId];
-		$label = $currentNode->attributes['label'];
-		if (!isset($grps0[$label])) {
-			return;
-		}
-
-		$firstInnerNodeId = $grps0[$label][0];
-		if ($firstInnerNodeId === $currentId) {
-			if (isset($grps0[$label][1])) {
-                                $type = isset($this->doNotDelete[$label]) && $this->doNotDelete[$label] ? "DNX" : "DN"; 
- 				$grps1[] = $groupId = $this->addGroup($grps0[$label], $type, $label); 
-                                $this->changeSinceLastSet = true;
-                        }
-			unset($grps0[$label]);
-                        unset($this->doNotDelete[$label]);
-		}
-	}
 
 	public function groupSiblingsPerName() {
 		// For every non innernode, this only groups its non inner children with a same full name.
-		$this->visitNodes([$this,  'beforeChildren_sn'], null, [$this, 'init_sn']);
-		$this->createActiveGroups(true);
-	}
-
-	private function init_sn() {
-                $this->changeSinceLastSet = false; 
-		$this->groupsPhase1 = [];
-                //echo "Starting SN".PHP_EOL."-----------".PHP_EOL;
-	}
-
-	private function beforeChildren_sn($currentId) {
-		$groups = [];
-		$adj = $this->getNotInnerArrowsOut($currentId); 
-                $type = "SN"; 
-		foreach ($adj as $targetId => $arrow) {
-                        if (count($this->activeGraph->arrowsIn[$targetId]) > 1) {continue;}
-			$label = $this->totalGraph->nodes[$targetId]->attributes['label'];
-                        if (
-                            $this->totalGraph->nodes[$targetId]->type !== "SN" && 
-                            $this->totalGraph->nodes[$targetId]->type !== "DN" &&
-                            $this->totalGraph->nodes[$targetId]->type !== "T" )
-                        {
-                            $type = "SNX";     
-                        }
-			$groups[$label][] = $targetId;
-                        if (count($groups[$label]) == 2) {
-                            //echo "Added node $targetId to a group with label $label, after {$groups[$label][0]}".PHP_EOL;
-                        }
-                        if (count($groups[$label]) > 2) {
-                            //echo "Added node $targetId to a group with label $label".PHP_EOL;
-                        }                        
-		}
-		foreach ($groups as $label => $group) {
-                    if (count($group) > 1) {
-			$this->groupsPhase1[] = $groupId = $this->addGroup($group, $type, $label);
-                        $this->changeSinceLastSet = true;                         
-                        //echo "Added new group $groupId".PHP_EOL; 
-                    }
-		}
+		$visitorSN = new VisitorSN();
+		$traversal = new Traversal($this->totalGraph, $visitorSN); 
+		$traversal->visitNodes();
+		return $visitorSN->newNonSingletonSinceLastSet; 
 	}
 
 	public function fullGroupSiblingsPerName() {
 		while (true) {
-			$this->groupSiblingsPerName();
-			if (!$this->changeSinceLastSet) {
+			$newNonSingletonSinceLastSet = $this->groupSiblingsPerName();
+			if (!$newNonSingletonSinceLastSet) {
                                 //echo "No group created".PHP_EOL. PHP_EOL; 
 				break;
 			}
 		}
 	}
 
-	public function groupSiblingsPerChildrenName() {
-		// For every non innernode, this only groups its non inner children with a same full name.
-                //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL; 
-		$this->visitNodes([$this, 'beforeChildren_scn'], null, [$this, 'init_scn']);
-		$this->createActiveGroups();
+	public function groupDescendentsPerName() {
+		$visitorDN = new VisitorDN();
+                $traversal = new Traversal($this->totalGraph, $visitorDN); 
+		$traversal->visitNodes();
                 //echo PHP_EOL; 
 	}
 
-	private function init_scn() {
-		$this->groupsPhase1 = [];
-                $this->changeSinceLastSet = false; 
+	public function groupSiblingsPerChildrenName() {
+		// For every non innernode, this only groups its non inner children with a same full name.
+                //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL; 
+		$visitorSCN = new VisitorSCN();
+                $traversal = new Traversal($this->totalGraph, $visitorSCN);
+		$traversal->visitNodes();
+                //echo PHP_EOL; 
 	}
-
-	private function beforeChildren_scn($currentId) {
-		$groups = []; 
-		$adj = $this->getNotInnerArrowsOut($currentId);
-		foreach ($adj as $targetId => $arrow) {
-                        if (count($this->totalGraph->arrowsIn[$targetId]) > 1) {
-                            continue;
-                        }
-			$adjacentNames = $this->getAdjacentNames($targetId);
-			if (empty($adjacentNames)) {
-				continue;
-			}
-			$label = "Parents of ". implode('&', array_keys($adjacentNames));
-			$groups[$label][] = $targetId;
-                        if (count($groups[$label]) == 2) {
-                            //echo "Added node $targetId to a group with label $label, after {$groups[$label][0]}".PHP_EOL;
-                        }
-                        if (count($groups[$label]) > 2) {
-                            //echo "Added node $targetId to a group with label $label".PHP_EOL;
-                        }                        
-		}
-		foreach ($groups as $label => $group) {
-			if (count($group) > 1) {
-				$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN", $label);
-                                $this->changeSinceLastSet = true;
-			}
-		}
-	}
-
-	private function getAdjacentNames($nodeId) {
-		$childrenNames = [];
-
-		$adj = $this->getNotInnerArrowsOut($nodeId);
-		foreach ($adj as $targetId => $arrow) {
-			if (isset($this->totalGraph->nodes[$targetId]->groupId)) {
-				continue;
-			}
-			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['label']] ??= 0;
-			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['label']] += $arrow->calls;
-		}
-		ksort ($childrenNames);
-		return $childrenNames;
-	}
-
-	public function getSubGraph($startId, $arrows = null) : array {
-		$startId ??= $this->rootId; 
-		$arrows ??= $this->activeGraph->arrowsOut;
-		$subArrows = [];
-		$subNodes  = [];
-		$toProcess = [$startId];
-		$subNodes[$startId] = $this->activeGraph->nodes[$startId];
-		$visited = [];
-		while (true) {
-			if ($toProcess == []) {
-				break;
-			}
-
-			$currentId = end($toProcess);
-
-			If (!isset($visited[$currentId]) || !$visited[$currentId]) {
-				$visited[$currentId] = true;
-				$adj = $arrows[$currentId] ?? [];
-				foreach ($adj as $targetId => $arrow) {
-					$subArrows[$currentId][$targetId] = $arrow;
-					if (
-						!isset($visited[$targetId]) || !$visited[$currentId]
-					) {
-						$toProcess[] = $targetId;
-						$subNodes[$targetId] = $this->activeGraph->nodes[$targetId];
-					}
-				}
-			} else {
-				array_pop($toProcess);
-			}
-		}
-		return [$subNodes, $subArrows, $startId];
-	}
-
-	private function addGroup($group, $type, $label) {
-                if ( count($group) == 1)  {
-                        // Singleton are represented by their inner node
-                        $groupId = $group[0];
-                        if ( $this->totalGraph->nodes[$groupId]->groupId !== null) {
-                            echo "Warning: resetting groupId of innernode of singleton $groupId"; 
-                            $this->totalGraph->nodes[$groupId]->groupId = null; 
-                        }
-                        //echo "Taking $groupId as a singleton".PHP_EOL; 
-                        return $groupId;  
-                }
-		$groupId = self::getGroupId($type);
-		$this->totalGraph->nodes[$groupId] = new Node($type);
-		$this->totalGraph->nodes[$groupId]->attributes['nodeId'] = $groupId;
-		$this->totalGraph->nodes[$groupId]->attributes['label'] = $label;
-
-		$this->totalGraph->nodes[$groupId]->attributes['timeFct'] = 0;
-		$this->totalGraph->nodes[$groupId]->attributes['timeExclusive'] = 0; 
-		foreach ($group as $innernodeId) {
-			$this->totalGraph->nodes[$innernodeId]->groupId = $groupId;
-			$this->totalGraph->nodes[$groupId]->innerNodesId[] = $innernodeId;
-			$this->totalGraph->nodes[$groupId]->attributes['timeFct']       += $this->totalGraph->nodes[$innernodeId]->attributes['timeFct'];
-			$this->totalGraph->nodes[$groupId]->attributes['timeExclusive'] += $this->totalGraph->nodes[$innernodeId]->attributes['timeExclusive'];
-                }
-                //echo "Added group $groupId with label $label".PHP_EOL; 
-		return $groupId;
-	}
-
-	private function createActiveGroups(bool $permanent = false) {
-
-		foreach ($this->groupsPhase1 as $groupId) {
-                        if (count($this->totalGraph->nodes[$groupId]->innerNodesId) === 1  ) {continue;} 
-			$this->createGroup($groupId);
-		}
-		foreach ($this->groupsPhase1 as $groupId) {
-                        if (count($this->totalGraph->nodes[$groupId]->innerNodesId) === 1  ) {continue;} 
-			$this->activateGroup($groupId, $permanent);
-		}
-	}
-
-	public function createGroup($groupId) {
-
-		$innerNodesId = $this->totalGraph->nodes[$groupId]->innerNodesId;
-		foreach ($innerNodesId as $nodeId) {
-			$arrowsOut = $this->totalGraph->arrowsOut[$nodeId] ?? [];
-			foreach ($arrowsOut as $targetId => $arrowOut) {
-				$this->totalGraph->arrowsOut[$groupId][$targetId] ??= new Arrow($groupId, $targetId, 0);
-				$this->totalGraph->arrowsOut[$groupId][$targetId]->calls += $arrowOut->calls;
-                                //echo "Adding {$arrowOut->calls} to arrow from $groupId to $targetId because of $nodeId".PHP_EOL; 
-				$this->totalGraph->arrowsIn[$targetId][$groupId] = $this->totalGraph->arrowsOut[$groupId][$targetId];
-			}
-			$arrowsIn = $this->totalGraph->arrowsIn[$nodeId] ?? [];
-			foreach ($arrowsIn as $sourceId => $arrowIn) {
-				$this->totalGraph->arrowsOut[$sourceId][$groupId] ??= new Arrow($sourceId, $groupId, 0);
-				$this->totalGraph->arrowsOut[$sourceId][$groupId]->calls += $arrowIn->calls;
-                                //echo "Adding {$arrowIn->calls} to arrow from $sourceId to $groupId because of $nodeId".PHP_EOL; 
-				$this->totalGraph->arrowsIn[$groupId][$sourceId] = $this->totalGraph->arrowsOut[$sourceId][$groupId];
-			}
-		}
-	}
-
+        
+        public function createDefaultActiveGraph () {
+                // To be called once we have the totalGraph, after the groups have been created. 
+                $visitorDefaultActiveGraph = new VisitorDefaultActiveGraph();
+                $visitorDefaultActiveGraph->setActiveGraph($this->activeGraph); 
+                $traversal = new Traversal($this->totalGraph, $visitorDefaultActiveGraph);
+                $traversal->visitNodes(); 
+        }
+        
 	public function activateGroup($groupId, $permanent) {
 
 		foreach ($this->totalGraph->nodes[$groupId]->innerNodesId as $nodeId) {
-			$this->deactivateNode($nodeId, $permanent);
+			$this->deactivateNode($nodeId);
+                        if ( $permanent ) {
+                            $this->removeNode($nodeId);
+                        }
 		}
 		$this->activateNode($groupId);
                 if ($permanent) {
@@ -698,10 +462,6 @@ class Profiler {
 			foreach ($this->totalGraph->arrowsIn[$nodeId] as $sourceId => $arrow) {
 				unset($this->activeGraph->arrowsOut[$sourceId][$nodeId]);
                                 unset($this->activeGraph->arrowsIn[$nodeId][$sourceId]);
-                                if ($permanent) {
-                                    unset($this->totalGraph->arrowsOut[$sourceId][$nodeId]);
-                                    unset($this->totalGraph->arrowsIn[$nodeId][$sourceId]);
-                                }
 			}
 			if (empty($this->activeGraph->arrowsOut[$sourceId])) {
 				unset($this->activeGraph->arrowsOut[$sourceId]);
@@ -709,23 +469,11 @@ class Profiler {
    			if (empty($this->activeGraph->arrowsIn[$nodeId])) {
 				unset($this->activeGraph->arrowsIn[$nodeId]);
 			}
-                        if ($permanent) {
-			    if (empty($this->totalGraph->arrowsOut[$sourceId])) {
-				unset($this->totalGraph->arrowsOut[$sourceId]);
-			    }
-   			    if (empty($this->totalGraph->arrowsIn[$nodeId])) {
-				unset($this->totalGraph->arrowsIn[$nodeId]);
-			    }
-                        }
 		}
 		if (isset($this->totalGraph->arrowsOut[$nodeId])) {
 			foreach ($this->totalGraph->arrowsOut[$nodeId] as $targetId => $arrow) {
 				unset($this->activeGraph->arrowsOut[$nodeId][$targetId]);
                                 unset($this->activeGraph->arrowsIn[$targetId][$nodeId]);
-                                if ($permanent) {
-				    unset($this->totalGraph->arrowsOut[$nodeId][$targetId]);
-                                    unset($this->totalGraph->arrowsIn[$targetId][$nodeId]);                                    
-                                }
 			}
 			if (empty($this->activeGraph->arrowsOut[$nodeId])) {
 				unset($this->activeGraph->arrowsOut[$nodeId]);
@@ -733,18 +481,7 @@ class Profiler {
 			if (empty($this->activeGraph->arrowsIn[$targetId])) {
 				unset($this->activeGraph->arrowsIn[$targetId]);
 			}
-                        if ($permanent) {                            
-			    if (empty($this->totalGraph->arrowsOut[$nodeId])) {
-				unset($this->totalGraph->arrowsOut[$nodeId]);
-			    }
-			    if (empty($this->totalGraph->arrowsIn[$targetId])) {
-				unset($this->totalGraph->arrowsIn[$targetId]);
-			    }
-                        }
 		}
 		unset($this->activeGraph->nodes[$nodeId]);
-                if ($permanent) {
-		    unset($this->totalGraph->nodes[$nodeId]);
-                }
 	}
 }
