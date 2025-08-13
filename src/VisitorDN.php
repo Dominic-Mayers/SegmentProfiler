@@ -67,6 +67,7 @@ class VisitorDN extends Visitor {
 			if (isset($grps0[$label][1])) {
                                 $type = isset($this->makeItDNXType[$label]) && $this->makeItDNXType[$label] ? "DNX" : "DN"; 
  				$grps1[] = $groupId = $this->addGroup($grps0[$label], $type, $label); 
+                                $a = 1;
                         }
 			unset($grps0[$label]);
                         unset($this->makeItDNXType[$label]);

@@ -32,6 +32,7 @@ class VisitorSCN extends Visitor {
 		foreach ($groups as $label => $group) {
 			if (count($group) > 1) {
 				$this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN", $label);
+                                $a = 0; 
 			}
 		}
 	}
