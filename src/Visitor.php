@@ -81,7 +81,8 @@ abstract class Visitor  {
                 foreach ($innerNodesId as $nodeId) {
                         $this->removeInnerNodes($nodeId);
                         $this->removeNode($nodeId); 
-                }           
+                }
+                $group->innerNodesId = [];
         }
         
         protected function removeNode($nodeId) {

@@ -25,17 +25,10 @@ class Profiler {
 		[ 'sc' => 'oranges9', 'fl' => '9', 'ft' => "white" ]
 	]; 
 
-        private string $rootId = "00000";
-        private bool $newNonSingletonSinceLastSet = false; 
         public ActiveGraph $activeGraph;
         public TotalGraph $totalGraph;
-        private array $doNotDelete  = []; 
-        private array $groupsPhase0 = [];
-	private array $groupsPhase1 = [];
-        private array $grpTraversalKey = []; 
 	public Graph $graph;
 	public GraphViz $graphviz;
-	static $nEnd = 0; 
 	
 	public function __construct(
 		private UrlGeneratorInterface $urlGenerator,

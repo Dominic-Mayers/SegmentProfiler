@@ -23,29 +23,24 @@ class Traversal {
 				break;
 			}
 
-			$currentId = end($toProcess);
+			$currentId = $toProcess[0];
 			$currentNode = $this->totalGraph->nodes[$currentId];
 
 			if ($currentNode->groupId) {
 				$visited[$currentId] = true;
-				array_pop($toProcess);
+				array_shift($toProcess);
 				continue;
 			}
 
 			If (!isset($visited[$currentId]) || !$visited[$currentId]) {
                                 method_exists($this->visitor, "beforeChildren") && $this->visitor->beforeChildren($currentId);
 				$visited[$currentId] = true;
-				$adj = $this->totalGraph->getNotInnerArrowsOut($currentId);
-				foreach ($adj as $targetId => $arrow) {
-					if (
-						!isset($visited[$targetId]) || !$visited[$currentId]
-					) {
-						$toProcess[] = $targetId;
-					}
-				}
+				$adj = array_keys($this->totalGraph->getNotInnerArrowsOut($currentId));
+                                $adjFiltered = array_filter($adj, fn($k) => !isset($visited[$k]) || !$visited[$k], 0);
+				$toProcess = [...$adjFiltered, ...$toProcess];
 			} else {
                             method_exists($this->visitor, "afterChildren") && $this->visitor->afterChildren($currentId);
-                            array_pop($toProcess);
+                            array_shift($toProcess);
 			}
 		}
 		method_exists($this->visitor, "finalize") && $this->visitor->finalize();

@@ -38,21 +38,14 @@ class VisitorSN extends Visitor {
 		foreach ($groups as $label => $group) {
                     if (count($group) > 1) {
 			$this->groupsPhase1[] = $groupId = $this->addGroup($group, $type, $label);
+                        $this->createGroup($groupId); 
+                        $groupNode = $this->totalGraph->nodes[$groupId]; 
+                        if ($groupNode->type === "SN") {
+                            $this->removeInnerNodes($groupId); 
+                        }
                         $this->newNonSingletonSinceLastSet = true;                         
                         //echo "Added new group $groupId".PHP_EOL; 
                     }
 		}
 	}
-        
-        protected function createGroups() {
-
-		foreach ($this->groupsPhase1 as $groupId) {
-                        $group = $this->totalGraph->nodes[$groupId]; 
-                        if (count($group->innerNodesId) <= 1  ) {continue;} 
-			$this->createGroup($groupId);
-                        if ($group->type === "SN") {
-                            $this->removeInnerNodes($groupId); 
-                        }
-		}
-	}        
 }

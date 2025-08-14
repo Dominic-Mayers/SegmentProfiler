@@ -20,8 +20,8 @@ class VisitorDefaultActiveGraph extends Visitor {
         public function beforeChildren($currentId) {
             $adjArrowsIn  = $this->totalGraph->getNotInnerArrowsIn($currentId);
             $adjArrowsOut = $this->totalGraph->getNotInnerArrowsOut($currentId);
-            $this->activeGraph->arrowsIn += $adjArrowsIn;
-            $this->activeGraph->arrowsOut += $adjArrowsOut;
+            $this->activeGraph->arrowsIn[$currentId] = $adjArrowsIn;
+            $this->activeGraph->arrowsOut[$currentId] = $adjArrowsOut;
             $this->activeGraph->nodes[$currentId] = $this->totalGraph->nodes[$currentId]; 
         }
 }
