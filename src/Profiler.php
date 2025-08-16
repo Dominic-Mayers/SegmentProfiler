@@ -39,108 +39,6 @@ class Profiler {
                 $this->totalGraph  = new TotalGraph();
 	}
 	
-	public function getTree(\Iterator $notesFile, ) {
-                // Create the root.
-		$currentId = $this->totalGraph->rootId;
-		$currentNode = $this->totalGraph->nodes[$currentId] = new Node('T');
-		$currentNode->attributes['nodeId'] = $currentId;
-		$currentNode->attributes['parentId'] = null;
-		$currentNode->attributes['startName'] = 'root';
-		$currentNode->attributes['label'] = 'root';                
-                
-                
-		foreach ($notesFile as $note) {
-			if ( empty (trim ($note))) { continue;}
-
-			$res = $this->processNote($currentId, $currentNode,  $note);
-                        
-			if ($res === "StopRoot") {
-				break;
-			}
-		}
-		$this->processNote($currentId, $currentNode, $this->totalGraph->rootId . ":node:endName=none");
-		$this->activeGraph->arrowsOut = $this->totalGraph->arrowsOut;
-		$this->activeGraph->arrowsIn = $this->totalGraph->arrowsIn;
-		$this->activeGraph->nodes = $this->totalGraph->nodes;
-	}
-
-	private function processNote(&$currentId, &$currentNode, $note) {
-		//echo "Note: ".trim($note).PHP_EOL;
-		$noteArr = explode("=", $note);
-		$topKey = trim($noteArr[0]);
-		$value = trim($noteArr[1]);
-		$topKeyArr = explode(":", $topKey, 2);
-		$nodeId = $topKeyArr[0];
-		$midKey = $topKeyArr[1];
-		$midKeyArr = explode(":", $midKey, 2);
-		$type = $midKeyArr[0];
-		$key = $midKeyArr[1];
-
-		if ($midKey == "node:startName") {
-			$newArrow = new Arrow($currentId, $nodeId);                   
-			$this->totalGraph->arrowsOut[$currentId][$nodeId] = $newArrow;
-			$this->totalGraph->arrowsIn[$nodeId][$currentId] = $newArrow;
-                        
-                        // This is the new currentNode !
-			$currentNode = new Node('T');
-			$currentNode->attributes['parentId'] = $currentId;
-			$currentNode->attributes['startName'] = $value;
-			$currentNode->attributes['label'] = $value;
-			$currentNode->attributes['nodeId'] = $nodeId;
-                                                
-			//echo "New currentId $nodeId with parentId $currentId.".PHP_EOL;
-			$currentId = $nodeId;
-			$this->totalGraph->nodes[$currentId] = $currentNode;
-		} else {
-			while ($currentId !== $nodeId) {
-				if (!$currentNode->attributes['parentId']) {
-					// Stopped by parent up to root, 
-					echo "Error: Could not find segment to stop $nodeId." . PHP_EOL;
-					exit();
-				}
-				echo "Stopping node $currentId by its parent "; 
-				$currentNode->attributes['stoppedByParent'] = true;
-				$currentNode->attributes['endName'] = 'none';
-                                                                
-				$currentId = $currentNode->attributes['parentId'];
-				$currentNode = $this->totalGraph->nodes[$currentId];
-				echo "$currentId, which is now the new currentId. <br>".PHP_EOL;
-			}
-			$currentNode->attributes[$key] = $value;
-			//echo "Set group:$key = $value".PHP_EOL;
-			if ($midKey === "node:endName") {
-				$newvalue = $currentNode->attributes['label'] .= "_$value";
-                                $this->setExclusiveTimeOfNode($currentId); 
-				$currentId = $currentNode->attributes['parentId'];
-				if (!empty($currentId)) {
-					$currentNode = $this->totalGraph->nodes[$currentId];
-					//echo "Moving to parent $currentId after endName".PHP_EOL;
-				} else {
-					//echo "Stopping the root.".PHP_EOL;
-					return "StopRoot";
-				}
-			}
-		}
-	}
-	
-        private function setExclusiveTimeOfNode($currentId) {
-	    // To be executed on the tree only.
-	    $totalTimeChildren = 0;
-            $node = $this->totalGraph->nodes[$currentId]; 
-	    $adj = $this->totalGraph->arrowsOut[$currentId] ?? []; 
-	    foreach ( $adj as $targetId => $arrow ) {
-	        $totalTimeChildren += $this->totalGraph->nodes[$targetId]->attributes['timeFct'];
-	    }
-	    if ( isset( $node->attributes['timeFct'] ) ) {
-	        $timeExclusive = $node->attributes['timeFct'] - $totalTimeChildren;
-		$node->attributes[ 'timeExclusive' ] = $timeExclusive;
-	    } else {
-		// Normally, this should only happen for the root.
-		$node->attributes['timeFct'] = $totalTimeChildren;
-		$node->attributes[ 'timeExclusive' ] = 0; 
-	    }
-	}
-
         public function setColorCode( $nodes = null ) {
 		// To be executed on the active graph or active subgraph. 
 		
@@ -275,11 +173,11 @@ class Profiler {
 		return [$subNodes, $subArrows, $startId];
 	}
 
-	public function createGraphViz($input = 'input', $graphArr = null , $color=true, $toUngroup =  ''): string {
+	public function createGraphViz($input = 'input', $graphArr = null , $recolor=false, $toUngroup =  ''): string {
 		$cM = $this->cM; 
 		$this->graph = new Graph();
 		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId];
-		if ($color) {
+		if ($recolor) {
 			$this->setColorCode($V);
 		}
 		if (empty($A)) { return "";}
@@ -345,24 +243,20 @@ class Profiler {
 		return $script; 
 	}
 
-        private function getVizLabel($nodeId) {
-		$node = $this->totalGraph->nodes[$nodeId]; 
-		if ( isset($node->attributes['timeExclusive'] ) ) {
-			$excTime = $node->attributes['timeExclusive'];
-			$excTimeInMillisec = number_format($excTime / 1E+6, 3);
-			$incTime = $node->attributes['timeFct'];
-			$incTimeInMillisec = number_format($incTime / 1E+6, 3);
-			$timeTxt = "($excTimeInMillisec, $incTimeInMillisec)";  
-		} else {
-			$timeTxt = "";
-		}
-		$label = $node->attributes['label'];
-                if (strlen($label) > 130) {
-                    $label = substr($label, 0, 130) . "... truncated "; 
-                }
-		return "   $nodeId: $label$timeTxt";
+	public function groupPerPath() {
+		// For every non innernode, this only groups its non inner children with a same full name.
+		$visitorP = new VisitorP();
+		$traversal = new Traversal($this->totalGraph, $visitorP); 
+		$traversal->visitNodes();
 	}
 
+	public function groupSiblingsPerPath() {
+		// For every non innernode, this only groups its non inner children with a same full name.
+		$visitorSP = new VisitorSP();
+		$traversal = new Traversal($this->totalGraph, $visitorSP); 
+		$traversal->visitNodes();
+	}
+        
 	public function groupSiblingsPerName() {
 		// For every non innernode, this only groups its non inner children with a same full name.
 		$visitorSN = new VisitorSN();
@@ -476,5 +370,23 @@ class Profiler {
 			}
 		}
 		unset($this->activeGraph->nodes[$nodeId]);
+	}
+
+        private function getVizLabel($nodeId) {
+		$node = $this->totalGraph->nodes[$nodeId]; 
+		if ( isset($node->attributes['timeExclusive'] ) ) {
+			$excTime = $node->attributes['timeExclusive'];
+			$excTimeInMillisec = number_format($excTime / 1E+6, 3);
+			$incTime = $node->attributes['timeFct'];
+			$incTimeInMillisec = number_format($incTime / 1E+6, 3);
+			$timeTxt = "($excTimeInMillisec, $incTimeInMillisec)";  
+		} else {
+			$timeTxt = "";
+		}
+		$label = $node->attributes['label'];
+                if (strlen($label) > 130) {
+                    $label = substr($label, 0, 130) . "... truncated "; 
+                }
+		return "   $nodeId: $label$timeTxt";
 	}
 }

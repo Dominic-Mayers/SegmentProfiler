@@ -13,9 +13,8 @@ class VisitorSCN extends Visitor {
 		$groups = []; 
 		$adj = $this->totalGraph->getNotInnerArrowsOut($currentId);
 		foreach ($adj as $targetId => $arrow) {
-                        if (count($this->totalGraph->arrowsIn[$targetId]) > 1) {
-                            continue;
-                        }
+                        $adjIn = $this->totalGraph->getNotInnerArrowsIn($targetId);
+                        if (count($adjIn) > 1) {continue;}
 			$adjacentNames = $this->getAdjacentNames($targetId);
 			if (empty($adjacentNames)) {
 				continue;
@@ -31,8 +30,8 @@ class VisitorSCN extends Visitor {
 		}
 		foreach ($groups as $label => $group) {
 			if (count($group) > 1) {
-                                $this->groupsPhase1[] = $groupId = $this->addGroup($group, "SCN", $label);
-                                $this->createGroup($groupId); 
+                                $this->groupsPhase1[] = $groupId = $this->totalGraph->addGroup($label, "SCN", $group);
+                                $this->totalGraph->createGroup($groupId); 
                                 $a = 0; 
 			}
 		}

@@ -10,18 +10,17 @@ class VisitorDN extends Visitor {
 
         // This is the array of groupId that have been identified and remains
         // to be created with addGroup (without the arrows).     
-        private array $groupsPhase0; 
+        private array $groupsPhase0;
         private array $makeItDNXType;
         
-        // Override parent method to remove inner nodes of DN groups.
-        protected function createGroups() {
+        private function createGroups() {
 
 		foreach ($this->groupsPhase1 as $groupId) {
                         $group = $this->totalGraph->nodes[$groupId]; 
                         if (count($group->innerNodesId) === 1  ) {continue;} 
-			$this->createGroup($groupId);
+			$this->totalGraph->createGroup($groupId);
                         if ($group->type === "DN") {
-                            $this->removeInnerNodes($groupId); 
+                            $this->totalGraph->removeInnerNodes($groupId); 
                         }
 		}
 	}
@@ -38,13 +37,9 @@ class VisitorDN extends Visitor {
 		$currentNode = $this->totalGraph->nodes[$currentId];
 		$label = $currentNode->attributes['label'];
 		$grps0[$label][] = $currentId;
-                if (count ($grps0[$label]) == 2 ) {
-                    //echo "Added node $currentId with label $label to a DN or DNX group, after {$grps0[$label][0]}".PHP_EOL;
-                }
-                if (count ($grps0[$label]) > 2 ) {
-                    //echo "Added node $currentId with label $label to a DN or DNX group".PHP_EOL;
-                }
                 if (
+                    $this->totalGraph->nodes[$currentId]->type !== "P" && 
+                    $this->totalGraph->nodes[$currentId]->type !== "SP" && 
                     $this->totalGraph->nodes[$currentId]->type !== "SN" && 
                     $this->totalGraph->nodes[$currentId]->type !== "DN" &&
                     $this->totalGraph->nodes[$currentId]->type !== "T" )
@@ -66,7 +61,7 @@ class VisitorDN extends Visitor {
 		if ($firstInnerNodeId === $currentId) {
 			if (isset($grps0[$label][1])) {
                                 $type = isset($this->makeItDNXType[$label]) && $this->makeItDNXType[$label] ? "DNX" : "DN"; 
- 				$grps1[] = $groupId = $this->addGroup($grps0[$label], $type, $label); 
+ 				$grps1[] = $groupId = $this->totalGraph->addGroup($label, $type, $grps0[$label]); 
                                 $a = 1;
                         }
 			unset($grps0[$label]);

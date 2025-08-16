@@ -24,9 +24,8 @@ class Traversal {
 			}
 
 			$currentId = $toProcess[0];
-			$currentNode = $this->totalGraph->nodes[$currentId];
 
-			if ($currentNode->groupId) {
+			if ($this->totalGraph->isGroup($currentId)) {
 				$visited[$currentId] = true;
 				array_shift($toProcess);
 				continue;

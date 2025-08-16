@@ -21,6 +21,8 @@ class VisitorSN extends Visitor {
                         if (count($adjIn) > 1) {continue;}
 			$label = $this->totalGraph->nodes[$targetId]->attributes['label'];
                         if (
+                            $this->totalGraph->nodes[$targetId]->type !== "P" && 
+                            $this->totalGraph->nodes[$targetId]->type !== "SP" && 
                             $this->totalGraph->nodes[$targetId]->type !== "SN" && 
                             $this->totalGraph->nodes[$targetId]->type !== "DN" &&
                             $this->totalGraph->nodes[$targetId]->type !== "T" )
@@ -37,11 +39,11 @@ class VisitorSN extends Visitor {
 		}
 		foreach ($groups as $label => $group) {
                     if (count($group) > 1) {
-			$this->groupsPhase1[] = $groupId = $this->addGroup($group, $type, $label);
-                        $this->createGroup($groupId); 
+			$this->groupsPhase1[] = $groupId = $this->totalGraph->addGroup($label, $type, $group);
+                        $this->totalGraph->createGroup($groupId); 
                         $groupNode = $this->totalGraph->nodes[$groupId]; 
                         if ($groupNode->type === "SN") {
-                            $this->removeInnerNodes($groupId); 
+                            $this->totalGraph->removeInnerNodes($groupId); 
                         }
                         $this->newNonSingletonSinceLastSet = true;                         
                         //echo "Added new group $groupId".PHP_EOL; 

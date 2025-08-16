@@ -43,7 +43,7 @@ class SegmentProfilerController extends AbstractController {
 			}
 		}
 		$profiler->setColorCode(); 
-                $script = $profiler->createGraphViz($input, $profiler->getSubGraph($startId), $color = false, $toUngroup);
+                $script = $profiler->createGraphViz($input, $profiler->getSubGraph($startId), false, $toUngroup);
 		$svgHtml = $this->gv->createImageData($profiler->graph);
                 $url = "/js/dropdown.js"; //$this->packages->getUrl('js/dropdown.js');
 		return new Response(
@@ -53,7 +53,7 @@ class SegmentProfilerController extends AbstractController {
 
 	private function setTree (Profiler $profiler, $input) {
 		$this->notesFile = new \SplFileObject('../src/Fixtures/'.$input.'.profile');
-        	$profiler->getTree($this->notesFile);
+        	$profiler->totalGraph->getTree($this->notesFile);
 		//$profiler->setExclusiveTime();
         }
 
@@ -66,14 +66,15 @@ class SegmentProfilerController extends AbstractController {
                     return;
                 }
                 $this->setTree($profiler, $input);
-                $profiler->fullGroupSiblingsPerName();
-                $profiler->groupSiblingsPerChildrenName();
+                //$profiler->groupPerPath(); 
+                $profiler->groupSiblingsPerPath(); 
                 $profiler->groupSiblingsPerName();
-		$profiler->groupDescendentsPerName();
-                
-                $profiler->createDefaultActiveGraph(); 
-                
+                $profiler->groupDescendentsPerName();
+                $profiler->groupSiblingsPerChildrenName(); 
+
+                $profiler->createDefaultActiveGraph();
+
                 $profiler->saveGraphInFile('../input/Graphs/'.$input.'.totgraph', false); 
-                $profiler->saveGraphInFile('../input/Graphs/'.$input.'.actgraph', true); 
-	}
+                $profiler->saveGraphInFile('../input/Graphs/'.$input.'.actgraph', true);
+        }
 }
