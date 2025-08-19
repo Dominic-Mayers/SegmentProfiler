@@ -4,10 +4,10 @@ namespace App;
 
 class Traversal {
     
-        private Visitor $visitor;
+        private AbstractVisitor $visitor;
         private TotalGraph $totalGraph;
         
-        public function __construct(TotalGraph $totalGraph, Visitor $visitor) {
+        public function __construct(TotalGraph $totalGraph, AbstractVisitor $visitor) {
                 $this->visitor = $visitor;
                 $this->totalGraph = $totalGraph;
                 $this->visitor->setTotalGraph($totalGraph); 
@@ -24,12 +24,6 @@ class Traversal {
 			}
 
 			$currentId = $toProcess[0];
-
-			if ($this->totalGraph->isGroup($currentId)) {
-				$visited[$currentId] = true;
-				array_shift($toProcess);
-				continue;
-			}
 
 			If (!isset($visited[$currentId]) || !$visited[$currentId]) {
                                 method_exists($this->visitor, "beforeChildren") && $this->visitor->beforeChildren($currentId);

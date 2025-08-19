@@ -2,7 +2,7 @@
 
 namespace App;
 
-class VisitorSP extends VisitorPAbstract {
+class VisitorSP extends AbstractVisitorP {
                         
 	public function init() {
                 $this->paths = [];
@@ -27,7 +27,7 @@ class VisitorSP extends VisitorPAbstract {
                     if (count($group) > 1) {
                         $label = explode("\0", $pathLabel)[0]; 
                         $key = $this->pathsTranspose[$pathLabel]; 
-			$this->groupsPhase1[] = $groupId = $this->totalGraph->addGroup($label, $type, $group, $key);
+			$this->groups[] = $groupId = $this->totalGraph->addGroup($label, $type, $group, $key);
                         $this->totalGraph->createGroup($groupId); 
                         $groupNode = $this->totalGraph->nodes[$groupId]; 
                         $this->totalGraph->removeInnerNodes($groupId); 

@@ -2,7 +2,7 @@
 
 namespace App;
 
-class VisitorDefaultActiveGraph extends Visitor {
+class VisitorDefaultActiveGraph extends AbstractVisitor {
 
         private ActiveGraph $activeGraph; 
 

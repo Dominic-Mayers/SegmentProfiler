@@ -2,7 +2,7 @@
 
 namespace App;
 
-abstract class VisitorPAbstract extends Visitor {
+abstract class AbstractVisitorP extends AbstractVisitor {
     
         public array $paths = []; 
         public array $pathsTranspose = []; 

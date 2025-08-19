@@ -9,7 +9,7 @@ namespace App;
 
 class TotalGraph {
         private string  $treeType = "T";
-        private string $noteRootId = "0";  
+        private string $noteRootId = "00000";  
         private int  $rootNb; // = (int) $noteRootId 
         
         public string $rootId; 
@@ -29,11 +29,9 @@ class TotalGraph {
             return $this->nodes[$nodeId]->isGroup(); 
         }
 
-        public function getNotInnerArrowsOut($nodeId) {
-        // This is the same as using the active graph in its original definition, just
-        // after the creation of the existing groups, but not after group desactivations.
+        public function getNotInnerArrowsOut($sourceId) {
                 $adjNotInnerOut = [];
-                $adjAllOut = $this->arrowsOut[$nodeId] ?? [];
+                $adjAllOut = $this->arrowsOut[$sourceId] ?? [];
                 foreach ($adjAllOut as $targetId => $arrow) {
                         if ( $this->nodes[$targetId]->groupId === null ) {
 				$adjNotInnerOut[$targetId] = $arrow;
@@ -42,37 +40,36 @@ class TotalGraph {
                 return $adjNotInnerOut;
         }
         
-        public function getNotInnerArrowsIn($nodeId) {
+        public function getNotInnerArrowsIn($targetId) {
         // This is the same as using the active graph in its original definition, just
         // after the creation of the existing groups, but not after group desactivations.
                 $adjNotInnerIn = [];
-                $adjAllIn = $this->arrowsIn[$nodeId] ?? [];
-                foreach ($adjAllIn as $targetId => $arrow) {
-                        if ( $this->nodes[$targetId]->groupId === null ) {
-				$adjNotInnerIn[$targetId] = $arrow;
+                $adjAllIn = $this->arrowsIn[$targetId] ?? [];
+                foreach ($adjAllIn as $sourceId => $arrow) {
+                        if ( $this->nodes[$sourceId]->groupId === null ) {
+				$adjNotInnerIn[$sourceId] = $arrow;
                         }
                 }
                 return $adjNotInnerIn;
         }
         
         public function getTree(\Iterator $notesFile, ) {
+
                 // Create the root.
-                $currentId = $this->addNode("root", $this->treeType, $this->rootNb); 
-		$currentNode = $this->nodes[$currentId];                
+                $currentId = $this->addNode($this->treeType, $this->rootNb); 
+		$currentNode = $this->nodes[$currentId];
 		$currentNode->attributes['parentId'] = null;
-		$currentNode->attributes['startName'] = 'root';
-                
+		$currentNode->attributes['startName'] = 'root';              
                 
 		foreach ($notesFile as $note) {
 			if ( empty (trim ($note))) { continue;}
-
-			$res = $this->processNote($currentId, $currentNode,  $note);
-                        
-			if ($res === "StopRoot") {
-				break;
-			}
+                        // Todo: Must check $note is not for a root.
+                        // The logic relies on that: two cases (1) ordinary
+                        // no root situation or (2) root situation after
+                        // the loop. 
+			$this->processNote($currentId, $currentNode,  $note);
 		}
-		$this->processNote($currentId, $currentNode, $this->noteRootId . ":node:endName=none");
+		$this->processNote($currentId, $currentNode, $this->noteRootId . ":node:endName=");
 	}
 
         public function addGroup($label, $type, $innerNodesId, $key = null) {
@@ -81,12 +78,13 @@ class TotalGraph {
                         exit();  
                 }
                 if (isset($key)) {
-                    $groupId = $this->addNode($label, $type, $key);
+                    $groupId = $this->addNode($type, $key);
                     //echo "Added node of group $groupId using key" . PHP_EOL; 
                 } else {
-                    $groupId = $this->addNode($label, $type); 
+                    $groupId = $this->addNode($type); 
                     //echo "Added node of group $groupId." . PHP_EOL; 
                 }
+		$this->nodes[$groupId]->attributes['label'] = $label;
 		$this->nodes[$groupId]->attributes['timeFct'] = 0;
 		$this->nodes[$groupId]->attributes['timeExclusive'] = 0; 
 		foreach ($innerNodesId as $innerNodeId) {
@@ -159,82 +157,138 @@ class TotalGraph {
 		}
 		unset($this->nodes[$nodeId]);
         }
-
-        private static function getNodeId($prefix, int|null $nodeNb) {
-		static $n = [];
-		$n[$prefix] ??= 1;
-                $nodeNb ??= $n[$prefix]++; 
-                $nodeId =  $prefix . str_pad($nodeNb, 5, '0', STR_PAD_LEFT);
-		return $nodeId; 
-	}
         
 	private function processNote(&$currentId, &$currentNode, $note) {
+                // This methods does not do much checks. It only fails
+                // when we try to stop the root in stopNodesUpUntil...
+                // If it a startName, it moves forward to noteNb from
+                // whatever is the current node. Otherwise, it search
+                // for the nodeId moving backard, as needed, but normally
+                // not needed. If it is an endName with the correct currentId,
+                // it stops the node and move backward to the parent.
+                // It fails when we try to stop the root in stopNodesUpUntil...
+                // The stop at the end happens on root only after the loop
+                // which is fine, because there is no more note. 
+          
 		//echo "Note: ".trim($note).PHP_EOL;
-		$noteArr = explode("=", $note);
-		$nodeNbAndKey = trim($noteArr[0]);
-		$keyArr = explode(":", $nodeNbAndKey, 3);
-		$nodeNb = (int) $keyArr[0];
-                // $keyArr[1] is unused 
-		$key = $keyArr[2];
-		$value = trim($noteArr[1]);
+                [$noteNb, $key,  $value] = $this->readNote($note);
 
 		if ($key == "startName") {
-                        // Set the new arrow
-                        $nodeId = $this->addNode($value, $this->treeType, $nodeNb); 
-			$newArrow = new Arrow($currentId, $nodeId);                   
-			$this->arrowsOut[$currentId][$nodeId] = $newArrow;
-			$this->arrowsIn[$nodeId][$currentId] = $newArrow;
-                        
-                        // Set the new currentNode !
-			$currentNode = $this->nodes[$nodeId];
-			$currentNode->attributes['parentId'] = $currentId;
-			$currentNode->attributes['startName'] = $value;                                                
-			//echo "New currentId $nodeId with parentId $currentId.".PHP_EOL;
-			$currentId = $nodeId;
-			$this->nodes[$currentId] = $currentNode;
+                        $nodeId = $this->createTreeNode($currentId, $noteNb, $value);
+                        $this->moveCurrentNodeForward($currentId, $currentNode, $nodeId); 
 		} else {
-                        $nodeId = self::getNodeId($this->treeType, $nodeNb); 
-			while ($currentId !== $nodeId) {
-				if ($currentNode->attributes['parentId'] === null) {
-					// Stopped by parent up to root, 
-					echo "Error: Could not find segment to stop $nodeId." . PHP_EOL;
-					exit();
-				}
-				echo "Stopping node $currentId by its parent "; 
-				$currentNode->attributes['stoppedByParent'] = true;
-				$currentNode->attributes['endName'] = 'none';
-                                                                
-				$currentId = $currentNode->attributes['parentId'];
-				$currentNode = $this->nodes[$currentId];
-				echo "$currentId, which is now the new currentId. <br>".PHP_EOL;
-			}
+                        $nodeId = self::getNodeId($this->treeType, $noteNb);
+                        $this->stopNodesUpUntilMatchNoteNodeId($currentId, $currentNode, $nodeId); 
 			$currentNode->attributes[$key] = $value;
 			//echo "Set group:$key = $value".PHP_EOL;
 			if ($key === "endName") {
-				$newvalue = $currentNode->attributes['label'] .= "_$value";
-                                $this->setExclusiveTimeOfNode($currentId); 
-				$currentId = $currentNode->attributes['parentId'];
-				if (!empty($currentId)) {
-					$currentNode = $this->nodes[$currentId];
-					//echo "Moving to parent $currentId after endName".PHP_EOL;
-				} else {
-					//echo "Stopping the root.".PHP_EOL;
-					return "StopRoot";
-				}
+                            // Todo: Must check $value !== "parent". It is reserved.
+                            $this->stopNote($currentId, $currentNode, $value);
 			}
 		}
 	}
+        
+        private function readNote($note) : array {
+		$noteArr = explode("=", $note);
+		$nodeNbAndKey = trim($noteArr[0]);
+		$keyArr = explode(":", $nodeNbAndKey, 3);
+		$noteNb = (int) $keyArr[0];
+                // $keyArr[1] is unused 
+		$key = $keyArr[2];
+		$value = trim($noteArr[1]); 
+                return [$noteNb, $key,  $value]; 
+        }
+        
+        private function createTreeNode ($currentId, $noteNb, $startName) : string {
 
-        private function addNode($label, $type, int|null $nodeNb = null) : string {
+                // Set the new node (target of new arrow) 
+                $nodeId = $this->addNode($this->treeType, $noteNb); 
+		$this->nodes[$nodeId]->attributes['parentId'] = $currentId;
+		$this->nodes[$nodeId]->attributes['startName'] = $startName;                                                
+                // Set the new arrow
+		$newArrow = new Arrow($currentId, $nodeId);                   
+		$this->arrowsOut[$currentId][$nodeId] = $newArrow;
+		$this->arrowsIn[$nodeId][$currentId] = $newArrow;
+                return $nodeId; 
+        }
+
+        private function addNode($type, int|null $nodeNb = null) : string {
              
 		$nodeId = self::getNodeId($type, $nodeNb);
                 $this->nodes[$nodeId] = new Node($type);
 		$this->nodes[$nodeId]->attributes['nodeId'] = $nodeId;
-		$this->nodes[$nodeId]->attributes['label'] = $label;
                 //echo "Added node $nodeId with label $label".PHP_EOL; 
                 return $nodeId; 
         }
 
+        private static function getNodeId($prefix, int|null $nb) {
+		static $n = [];
+		$n[$prefix] ??= 1;
+                $nb ??= $n[$prefix]++; 
+                $nodeId =  $prefix . str_pad($nb, 5, '0', STR_PAD_LEFT);
+		return $nodeId; 
+	}
+
+        private function moveCurrentNodeForward(&$currentId, &$currentNode, $nodeId) {
+		$currentNode = $this->nodes[$nodeId];
+		//echo "New currentId $nodeId with parentId $currentId.".PHP_EOL;
+		$currentId = $nodeId;
+        }
+        
+        private function stopNodesUpUntilMatchNoteNodeId (&$currentId, &$currentNode, $nodeId) {
+                // Normally $currentId === $nodeId in input and the method does nothing.
+                // Otherwise, it only stops notes and move up until $currentId === $nodeId
+                // or exit on error when $currentNode->attributes['parentId'] === null (root). 
+                // Two outcomes: exit on error or $currentId === $nodeId. 
+                // In all cases, it does nothing on the final currentId node.
+            
+                // If $nodeId !== $rootId, it is an ordinary situation, which can
+                // lead to an exit on error.  
+            
+                // If $nodeId == $rootId, it can only be the artificial note 
+                // $this->noteRootId . ":node:endName=" after the loop. 
+                // In that case, it does not exit on error, because the
+                // the while loop stops with $currentId === $rootId before the
+                // error can occur. 
+
+                // The second case stops the root, but is fine, because there is no
+                // note after the loop. 
+                // Stopping the root in other cases might be useful for
+                // debugging info, but we don't do that now. Therefore, 
+                // the loop  stops with error before calling stopNote on
+                // the root, i.e., when parentId is null. 
+            
+ 		while ($currentId !== $nodeId) {
+                        // No file note should have the root noteNb.  
+			echo "Stopping node $currentId by its parent "; 
+			$currentNode->attributes['endName'] = 'parent'; 
+                        if ( $currentNode->attributes['parentId'] === null ) {
+                            echo "Exiting before stopping the root while searching node $nodeId". PHP_EOL;
+                            exit(); 
+                        }
+                        $this->stopNote($currentId, $currentNode, 'parent'); 
+			echo "$currentId, which is now the new currentId.".PHP_EOL;
+		}          
+        }
+
+	private function stopNote(&$currentId, &$currentNode, $endName) {
+                // It only sets the label and the exclusive time and move
+                // currentId and currentNode backward to their parent values.
+                // StopNote is the last step before the next note, which is normally for the parent. .
+                $currentNode->attributes['label'] = $currentNode->attributes['startName'] . "_". $endName;
+                $this->setExclusiveTimeOfNode($currentId); 
+		$currentId = $currentNode->attributes['parentId'];
+		if ($currentId !== null) {
+			$currentNode = $this->nodes[$currentId];
+			//echo "Moving to parent $currentId after endName $endName".PHP_EOL;
+		} elseif ($endName === 'parent')  {
+                        echo "Error: trying to stop root with endName=parent.". PHP_EOL;
+                        exit(); 
+		} else {
+                        // echo "Stopping the root normally"; 
+                }
+        }
+        
         private function setExclusiveTimeOfNode($currentId) {
 	    // To be executed on the tree only.
 	    $totalTimeChildren = 0;

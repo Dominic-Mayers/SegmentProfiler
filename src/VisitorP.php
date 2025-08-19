@@ -2,12 +2,12 @@
 
 namespace App;
 
-class VisitorP extends VisitorPAbstract {
+class VisitorP extends AbstractVisitorP {
     
-        private array $groups;
+        private array $pathLabelGroups;
         
 	public function init() {
-                $this->paths = [];
+                $this->pathLabelGroups = [];
                 $this->pathsTranspose = [];
 		$this->groups = [];
 	}
@@ -16,7 +16,7 @@ class VisitorP extends VisitorPAbstract {
 
             [$key, $pathLabel] = $this->setNewKeyPath($currentId);
 
-            $this->groups[$pathLabel] ??= []; 
+            $this->pathLabelGroups[$pathLabel] ??= []; 
             $this->groups[$pathLabel][] = $currentId;
            
             //echo "Added $currentId in group $pathLabel with key $key.". PHP_EOL; 
@@ -24,7 +24,7 @@ class VisitorP extends VisitorPAbstract {
 
 	public function finalize () {
             foreach ($this->paths as $key => $pathLabel) {
-                $group = $this->groups[$pathLabel]; 
+                $group = $this->pathLabelGroups[$pathLabel]; 
                 if (count($group) > 1 ) {
                     $label = explode("\0", $pathLabel)[0]; 
                     $groupId = $this->totalGraph->addGroup($label, "P", $group, $key);

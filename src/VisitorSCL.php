@@ -2,10 +2,10 @@
 
 namespace App;
 
-class VisitorSCN extends Visitor {
+class VisitorSCL extends AbstractVisitor {
     
 	public function init() {
-		$this->groupsPhase1 = [];
+		$this->groups = [];
                 //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL;
 	}
 
@@ -21,16 +21,10 @@ class VisitorSCN extends Visitor {
 			}
 			$label = "Parents of ". implode(' & ', array_keys($adjacentNames));
 			$groups[$label][] = $targetId;
-                        if (count($groups[$label]) == 2) {
-                            //echo "Added node $targetId to a group with label $label, after {$groups[$label][0]}".PHP_EOL;
-                        }
-                        if (count($groups[$label]) > 2) {
-                            //echo "Added node $targetId to a group with label $label".PHP_EOL;
-                        }                        
 		}
 		foreach ($groups as $label => $group) {
 			if (count($group) > 1) {
-                                $this->groupsPhase1[] = $groupId = $this->totalGraph->addGroup($label, "SCN", $group);
+                                $this->groups[] = $groupId = $this->totalGraph->addGroup($label, "SCN", $group);
                                 $this->totalGraph->createGroup($groupId); 
                                 $a = 0; 
 			}

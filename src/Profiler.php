@@ -259,10 +259,9 @@ class Profiler {
         
 	public function groupSiblingsPerName() {
 		// For every non innernode, this only groups its non inner children with a same full name.
-		$visitorSN = new VisitorSN();
-		$traversal = new Traversal($this->totalGraph, $visitorSN); 
+		$visitorSL = new VisitorSL();
+		$traversal = new Traversal($this->totalGraph, $visitorSL); 
 		$traversal->visitNodes();
-		return $visitorSN->newNonSingletonSinceLastSet; 
 	}
 
 	public function fullGroupSiblingsPerName() {
@@ -276,8 +275,8 @@ class Profiler {
 	}
 
 	public function groupDescendentsPerName() {
-		$visitorDN = new VisitorDN();
-                $traversal = new Traversal($this->totalGraph, $visitorDN); 
+		$visitorDL = new VisitorDL();
+                $traversal = new Traversal($this->totalGraph, $visitorDL); 
 		$traversal->visitNodes();
                 //echo PHP_EOL; 
 	}
@@ -285,8 +284,8 @@ class Profiler {
 	public function groupSiblingsPerChildrenName() {
 		// For every non innernode, this only groups its non inner children with a same full name.
                 //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL; 
-		$visitorSCN = new VisitorSCN();
-                $traversal = new Traversal($this->totalGraph, $visitorSCN);
+		$visitorSCL = new VisitorSCL();
+                $traversal = new Traversal($this->totalGraph, $visitorSCL);
 		$traversal->visitNodes();
                 //echo PHP_EOL; 
 	}
