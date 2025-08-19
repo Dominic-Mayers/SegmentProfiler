@@ -4,34 +4,11 @@ namespace App;
 
 class VisitorSCL extends AbstractVisitor {
     
-	public function init() {
-		$this->groups = [];
-                //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL;
-	}
-
 	public function beforeChildren($currentId) {
-		$groups = []; 
-		$adj = $this->totalGraph->getNotInnerArrowsOut($currentId);
-		foreach ($adj as $targetId => $arrow) {
-                        $adjIn = $this->totalGraph->getNotInnerArrowsIn($targetId);
-                        if (count($adjIn) > 1) {continue;}
-			$adjacentNames = $this->getAdjacentNames($targetId);
-			if (empty($adjacentNames)) {
-				continue;
-			}
-			$label = "Parents of ". implode(' & ', array_keys($adjacentNames));
-			$groups[$label][] = $targetId;
-		}
-		foreach ($groups as $label => $group) {
-			if (count($group) > 1) {
-                                $this->groups[] = $groupId = $this->totalGraph->addGroup($label, "SCN", $group);
-                                $this->totalGraph->createGroup($groupId); 
-                                $a = 0; 
-			}
-		}
+            $this->groupSiblingsPerCallBack($currentId, "SCL", [$this, "getAdjacentNames"]);
 	}
 
-	private function getAdjacentNames($nodeId) {
+	protected function getAdjacentNames($nodeId) : bool | string {
 		$childrenNames = [];
 
 		$adj = $this->totalGraph->getNotInnerArrowsOut($nodeId);
@@ -42,7 +19,12 @@ class VisitorSCL extends AbstractVisitor {
 			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['label']] ??= 0;
 			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['label']] += $arrow->calls;
 		}
+                if (empty($childrenNames)) {
+				return false; 
+	        }
 		ksort ($childrenNames);
-		return $childrenNames;
+		$label = "Parents of ". implode(' & ', array_keys($childrenNames));
+
+		return $label;
 	}
 }

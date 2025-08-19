@@ -21,7 +21,6 @@ class VisitorDL extends AbstractVisitor {
 
 		foreach ($this->groups as $groupId) {
                         $group = $this->totalGraph->nodes[$groupId]; 
-                        if (count($group->innerNodesId) === 1  ) {continue;} 
 			$this->totalGraph->createGroup($groupId);
                         if ($group->type === "DL") {
                             $this->totalGraph->removeInnerNodes($groupId); 
@@ -37,10 +36,9 @@ class VisitorDL extends AbstractVisitor {
 	}
 
 	public function beforeChildren($currentId) {
-		$grps0 =& $this->labelGroups;
 		$currentNode = $this->totalGraph->nodes[$currentId];
 		$label = $currentNode->attributes['label'];
-		$grps0[$label][] = $currentId;
+		$this->labelGroups[$label][] = $currentId;
                 if ( ! $this->hasSingleLabel($currentId) )
                 {
                     $this->hasNotSingleLabel[$label] = true;     
@@ -48,22 +46,19 @@ class VisitorDL extends AbstractVisitor {
 	}
 
 	public function afterChildren($currentId) {
-		$grps0 = & $this->labelGroups;
-		$grps1 = & $this->groups;
 		$currentNode = $this->totalGraph->nodes[$currentId];
 		$label = $currentNode->attributes['label'];
-		if (!isset($grps0[$label])) {
+		if (!isset($this->labelGroups[$label])) {
 			return;
 		}
 
-		$firstInnerNodeId = $grps0[$label][0];
+		$firstInnerNodeId = $this->labelGroups[$label][0];
 		if ($firstInnerNodeId === $currentId) {
-			if (isset($grps0[$label][1])) {
+			if (count($this->labelGroups[$label]) > 1) {
                                 $type = isset($this->hasNotSingleLabel[$label]) ? "DLX" : "DL"; 
- 				$grps1[] = $groupId = $this->totalGraph->addGroup($label, $type, $grps0[$label]); 
-                                $a = 1;
+ 				$this->groups[] = $groupId = $this->totalGraph->addGroup($label, $type, $this->labelGroups[$label]); 
                         }
-			unset($grps0[$label]);
+			unset($this->labelGroups[$label]);
                         unset($this->hasNotSingleLabel[$label]);
 		}
 	}
