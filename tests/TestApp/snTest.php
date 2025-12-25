@@ -1,41 +1,38 @@
 <?php
-include '../../bundles/Codeforweb/SegmentNotes/src/Note.php';
-
-use Codeforweb\SegmentNOtes\Note; 
+require_once __DIR__ . '/../../profilecode/src/Segment.php';
+use Codeforweb\SegmentNotes\Segment; 
 
 for ( $i=0; $i<=1; $i++) {
-    $s = Note::initNote('A');
-    Note::endNote($s);
+    $s = Segment::startSegment('A');
+    Segment::endSegment($s);
 
-    $s = Note::initNote('B');
-    $s1 = Note::initNote('A');
-    Note::endNote($s1);
+    $s = Segment::startSegment('B');
+    $s1 = Segment::startSegment('A');
+    Segment::endSegment($s1);
 
-    $s1 = Note::initNote('B');
-    Note::endNote($s1);
+    $s1 = Segment::startSegment('B');
+    Segment::endSegment($s1);
 
-    $s1 = Note::initNote('A');
-    Note::endNote($s1);
+    $s1 = Segment::startSegment('A');
+    Segment::endSegment($s1);
 
-    $s1 = Note::initNote('C');
-    Note::endNote($s1);
+    $s1 = Segment::startSegment('C');
+    Segment::endSegment($s1);
     
-    $s1 = Note::initNote('B');
-    Note::endNote($s1);
+    $s1 = Segment::startSegment('B');
+    Segment::endSegment($s1);
 
-    Note::endNote($s);
+    Segment::endSegment($s);
 
-    $s = Note::initNote('C');
-    Note::endNote($s);
+    $s = Segment::startSegment('C');
+    Segment::endSegment($s);
 
-    $s = Note::initNote('A');
-    Note::endNote($s);
+    $s = Segment::startSegment('A');
+    Segment::endSegment($s);
 
-    $s = Note::initNote('B');
-    Note::endNote($s);
+    $s = Segment::startSegment('B');
+    Segment::endSegment($s);
 
-    $s = Note::initNote('C');
-    Note::endNote($s);
+    $s = Segment::startSegment('C');
+    Segment::endSegment($s);
 }
-
-file_put_contents("/home/dominic/app_devel/SegmentProfiler/input/snTest.profile", Note::$segmentNotes);

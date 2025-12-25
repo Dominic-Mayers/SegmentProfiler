@@ -38,20 +38,20 @@ foreach ($iterator as $fileinfo) {
     //echo $filepathorig. PHP_EOL; 
     $code = file_get_contents($pathsource);
     
-    $visitorUse = new VisitorUse($stmtast);
-    $visitorUse->foundUseStatement= false; 
+    $visitorUse = new VisitorUse();
+    $visitorUse->addesUseStatement= false; // This might not be needed.
     $ast = $parser->parse($code);
     $traverserUse = new NodeTraverser();
     $traverserUse->addVisitor($visitorUse);
     $astUse = $traverserUse->traverse($ast);
     
-    if (! $visitorUse->foundUseStatement) {
+    if (! $visitorUse->addedUseStatement) {
         echo "No use statement: ".$pathsource. PHP_EOL;  
         continue; 
     }
     
     $traverser = new NodeTraverser();
-    $visitor   = new Visitor($stmtast); 
+    $visitor   = new Visitor(); 
     $traverser->addVisitor($visitor);
     $astFinal = $traverser->traverse($astUse);
     

@@ -1,7 +1,7 @@
 <?php
 use PhpParser\NodeTraverser;
 use PhpParser\PrettyPrinter;
-
+use PhpParser\ParserFactory;
 
 if ( ! isset($argv[1] ) )  {
     echo "No filename provided.".PHP_EOL;
@@ -15,21 +15,22 @@ if ( ! file_exists($argv[1]) )  {
 
 
 $code = file_get_contents($argv[1]);
-
 require_once('initCreateNotes.php');
-$visitorUse   = new VisitorUse($stmtast);
-$visitorUse->foundUseStatement= false; 
+$parser = (new ParserFactory())->createForNewestSupportedVersion();
+$visitorUse   = new VisitorUse();
+$visitorUse->addedUseStatement= false; // That might not be needed.  
 $ast = $parser->parse($code);
 $traverserUse = new NodeTraverser();
 $traverserUse->addVisitor($visitorUse);
 $astUse = $traverserUse->traverse($ast);
 
-if (! $visitorUse->foundUseStatement) {
+if (! $visitorUse->addedUseStatement) {
+    echo "No Use statement.";
     exit(); 
 }
 
 $traverser = new NodeTraverser();
-$visitor   = new Visitor($stmtast);  
+$visitor   = new Visitor();  
 $traverser->addVisitor($visitor);
 $astFinal = $traverser->traverse($astUse);
 

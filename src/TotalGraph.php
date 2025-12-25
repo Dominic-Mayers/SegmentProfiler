@@ -15,7 +15,7 @@ class TotalGraph {
         public string $rootId; 
         public array   $nodes = [];
         public array   $arrowsOut = []; 
-        private array   $arrowsIn = [];
+        public array   $arrowsIn = [];
         
         //Set in P or SP, but use arrays here instead of strings.
         public array $arrayPaths = []; 
@@ -69,7 +69,7 @@ class TotalGraph {
                         // the loop. 
 			$this->processNote($currentId, $currentNode,  $note);
 		}
-		$this->processNote($currentId, $currentNode, $this->noteRootId . ":node:endName=");
+		$this->processNote($currentId, $currentNode, $this->noteRootId . ":endName=root");
 	}
 
         public function addGroup($label, $type, $innerNodesId, $key = null) {
@@ -193,8 +193,7 @@ class TotalGraph {
 		$nodeNbAndKey = trim($noteArr[0]);
 		$keyArr = explode(":", $nodeNbAndKey, 3);
 		$noteNb = (int) $keyArr[0];
-                // $keyArr[1] is unused 
-		$key = $keyArr[2];
+		$key = $keyArr[1];
 		$value = trim($noteArr[1]); 
                 return [$noteNb, $key,  $value]; 
         }

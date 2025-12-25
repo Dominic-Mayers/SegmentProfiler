@@ -23,7 +23,8 @@ class SegmentProfilerController extends AbstractController {
 	
 	#[Route('/tree/{input}')]
 	public function showTree(Profiler $profiler, $input): Response {
-                $this->setTree($profiler, $input); 
+                $this->setTree($profiler, $input);
+                $profiler->createDefaultActiveGraph();
                 $profiler->setColorCode();
                 $profiler->createGraphViz();
                 $svgHtml = $this->gv->createImageHtml($profiler->graph); 
@@ -67,10 +68,10 @@ class SegmentProfilerController extends AbstractController {
                 }
                 $this->setTree($profiler, $input);
                 //$profiler->groupPerPath(); 
-                //$profiler->groupSiblingsPerPath(); 
+                $profiler->groupSiblingsPerPath(); 
                 $profiler->groupSiblingsPerName();
                 $profiler->groupDescendentsPerName();
-                $profiler->groupSiblingsPerChildrenName(); 
+                //$profiler->groupSiblingsPerChildrenName(); 
 
                 $profiler->createDefaultActiveGraph();
 

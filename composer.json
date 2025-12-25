@@ -60,13 +60,14 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "App\\": "src/",
+            "Codeforweb\\SegmentNotes\\": "profilecode/src"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "App\\Tests\\": "tests/",
-            "Codeforweb\\SegmentNotes\\": "bundles/Codeforweb/SegmentNotes/src/"
+            "Codeforweb\\SegmentNotes\\": "profilecode/src/"
         }
     },
     "replace": {
