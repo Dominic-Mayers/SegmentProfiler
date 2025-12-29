@@ -59,23 +59,23 @@ class SegmentProfilerController extends AbstractController {
         }
 
 	private function setDefaultGroups (Profiler $profiler, $input) {
-                $filenameTotal  = '../input/Graphs/'.$input.'.totgraph'; 
-                $filenameActive = '../input/Graphs/'.$input.'.actgraph'; 
+                $filenameTotal  = __DIR__ . '/../../input/Graphs/'.$input.'.totgraph'; 
+                $filenameActive = __DIR__ . '/../../input/Graphs/'.$input.'.actgraph'; 
                 if (false && file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
                     $profiler->restoreGraphFromFile($filenameTotal,  false);
                     $profiler->restoreGraphFromFile($filenameActive, true);
                     return;
                 }
                 $this->setTree($profiler, $input);
-                //$profiler->groupPerPath(); 
                 $profiler->groupSiblingsPerPath(); 
-                $profiler->groupSiblingsPerName();
-                $profiler->groupDescendentsPerName();
-                //$profiler->groupSiblingsPerChildrenName(); 
+                //$profiler->groupDescendentsPerLabel();
+                //$profiler->groupPerPath(); 
+                //$profiler->groupSiblingsPerLabel();
+                //$profiler->groupSiblingsPerChildrenLabel(); 
 
                 $profiler->createDefaultActiveGraph();
 
-                $profiler->saveGraphInFile('../input/Graphs/'.$input.'.totgraph', false); 
-                $profiler->saveGraphInFile('../input/Graphs/'.$input.'.actgraph', true);
+                $profiler->saveGraphInFile($filenameTotal, false); 
+                $profiler->saveGraphInFile($filenameActive, true);
         }
 }

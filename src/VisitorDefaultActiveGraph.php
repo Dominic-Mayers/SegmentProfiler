@@ -20,8 +20,14 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         public function beforeChildren($currentId) {
             $adjArrowsIn  = $this->totalGraph->getNotInnerArrowsIn($currentId);
             $adjArrowsOut = $this->totalGraph->getNotInnerArrowsOut($currentId);
-            $this->activeGraph->arrowsIn[$currentId] = $adjArrowsIn;
-            $this->activeGraph->arrowsOut[$currentId] = $adjArrowsOut;
-            $this->activeGraph->nodes[$currentId] = $this->totalGraph->nodes[$currentId]; 
+            if ( ! empty ($adjArrowsIn)  || ! empty ($adjArrowsOut)) {
+                $this->activeGraph->nodes[$currentId] = $this->totalGraph->nodes[$currentId];
+            }
+            if ( ! empty($adjArrowsIn)) {    
+                $this->activeGraph->arrowsIn[$currentId] = $adjArrowsIn;
+            }
+            if ( ! empty($adjArrowsOut)) {    
+                $this->activeGraph->arrowsOut[$currentId] = $adjArrowsOut;   
+            }
         }
 }

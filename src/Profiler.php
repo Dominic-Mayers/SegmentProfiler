@@ -3,9 +3,7 @@ namespace App;
 
 use Graphp\GraphViz\GraphViz; 
 use Graphp\Graph\Graph;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use SVG\SVG;
 
 require_once ('Node.php');
 require_once ('Arrow.php');
@@ -32,7 +30,6 @@ class Profiler {
 	
 	public function __construct(
 		private UrlGeneratorInterface $urlGenerator,
-                private EntityManagerInterface $entityManager,
 	) {
 		$this->graphviz    = new GraphViz();
                 $this->activeGraph = new ActiveGraph(); 
@@ -257,31 +254,21 @@ class Profiler {
 		$traversal->visitNodes();
 	}
         
-	public function groupSiblingsPerName() {
+	public function groupSiblingsPerLabel() {
 		// For every non innernode, this only groups its non inner children with a same full name.
 		$visitorSL = new VisitorSL();
 		$traversal = new Traversal($this->totalGraph, $visitorSL); 
 		$traversal->visitNodes();
 	}
 
-	public function fullGroupSiblingsPerName() {
-		while (true) {
-			$newNonSingletonSinceLastSet = $this->groupSiblingsPerName();
-			if (!$newNonSingletonSinceLastSet) {
-                                //echo "No group created".PHP_EOL. PHP_EOL; 
-				break;
-			}
-		}
-	}
-
-	public function groupDescendentsPerName() {
+	public function groupDescendentsPerLabel() {
 		$visitorDL = new VisitorDL();
                 $traversal = new Traversal($this->totalGraph, $visitorDL); 
 		$traversal->visitNodes();
                 //echo PHP_EOL; 
 	}
 
-	public function groupSiblingsPerChildrenName() {
+	public function groupSiblingsPerChildrenLabel() {
 		// For every non innernode, this only groups its non inner children with a same full name.
                 //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL; 
 		$visitorSCL = new VisitorSCL();

@@ -1,5 +1,0 @@
-services:
-    Codeforweb\SegmentNotes\EventListener\TerminateListener:
-        tags:
-            - { name: kernel.event_listener, event: kernel.terminate, priority: -512 }
-            

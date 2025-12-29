@@ -36,20 +36,20 @@ class InitGraphCommand extends Command{
         echo $dot; 
         return Command::SUCCESS;
         
-        //$profiler->groupDescendentsPerName();
+        //$profiler->groupDescendentsPerLabel();
         //$dot = $profiler->createDot([]);
         //file_put_contents('output/dn.dot', $dot);
 
-        $profiler->fullGroupSiblingsPerName();
+        $profiler->fullGroupSiblingsPerLabel();
         file_put_contents('output/fsn1.dot', $profiler->createGraphViz());
 
-        $profiler->groupSiblingsPerChildrenName();
+        $profiler->groupSiblingsPerChildrenLabel();
         file_put_contents('output/scn.dot', $profiler->createGraphViz());
 
-        $profiler->fullGroupSiblingsPerName();
+        $profiler->fullGroupSiblingsPerLabel();
         file_put_contents('output/fsn2.dot', $profiler->createGraphViz());
 
-        $profiler->groupDescendentsPerName();
+        $profiler->groupDescendentsPerLabel();
         file_put_contents('output/dn.dot', $profiler->createGraphViz());
 
         //$profiler->deactivateGroup('SCN00001');

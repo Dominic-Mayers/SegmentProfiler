@@ -44,4 +44,9 @@ class Segment {
         fwrite(self::$fh, $segment->segmentId . ":timeFct=" . $segment->timeFct . PHP_EOL .
                           $segment->segmentId . ":endName=" . $endName . PHP_EOL);
     }
+    
+    static public function writeSegment($segment, $endName="none") {
+            
+    }
+
 }

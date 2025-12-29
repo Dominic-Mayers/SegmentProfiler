@@ -4,29 +4,21 @@ namespace App;
 
 class VisitorP extends AbstractVisitorP {
     
-        private array $pathLabelGroups;
+        private array $groups;
         
-	public function init() {
-                $this->pathLabelGroups = [];
-                $this->pathsTranspose = [];
-		$this->groups = [];
-	}
-
 	public function afterChildren($currentId) {
 
-            [$key, $pathLabel] = $this->setNewKeyPath($currentId);
-
-            $this->pathLabelGroups[$pathLabel] ??= []; 
-            $this->groups[$pathLabel][] = $currentId;
+            [ , $path] = $this->setNewPath($currentId);
+            $this->groups[$path][] = $currentId;
            
-            //echo "Added $currentId in group $pathLabel with key $key.". PHP_EOL; 
+            //echo "Added $currentId in group $path.". PHP_EOL; 
 	}
 
 	public function finalize () {
-            foreach ($this->paths as $key => $pathLabel) {
-                $group = $this->pathLabelGroups[$pathLabel]; 
+            foreach ($this->groups as $path => $group) {
                 if (count($group) > 1 ) {
-                    $label = explode("\0", $pathLabel)[0]; 
+                    $label = explode(".", $path)[0]; 
+                    $key = $this->pathsTranspose[$path];
                     $groupId = $this->totalGraph->addGroup($label, "P", $group, $key);
                     $this->totalGraph->createGroup($groupId); 
                     $this->totalGraph->removeInnerNodes($groupId);

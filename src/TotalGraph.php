@@ -17,7 +17,8 @@ class TotalGraph {
         public array   $arrowsOut = []; 
         public array   $arrowsIn = [];
         
-        //Set in P or SP, but use arrays here instead of strings.
+        // Gives the path of each pathKey. 
+        // Set in P or SP, but paths are arrays instead of strings.
         public array $arrayPaths = []; 
 
         public function __construct() {
@@ -77,13 +78,13 @@ class TotalGraph {
                         echo "Error: attempting to create a singleton".PHP_EOL; 
                         exit();  
                 }
-                if (isset($key)) {
-                    $groupId = $this->addNode($type, $key);
-                    //echo "Added node of group $groupId using key" . PHP_EOL; 
-                } else {
-                    $groupId = $this->addNode($type); 
-                    //echo "Added node of group $groupId." . PHP_EOL; 
+                $groupId = $this->addNode($type); 
+                //echo "Added node of group $groupId." . PHP_EOL; 
+                
+                if ( isset($key) ) {
+                    $this->nodes[$groupId]->attributes['pathKey'] = $key;
                 }
+
 		$this->nodes[$groupId]->attributes['label'] = $label;
 		$this->nodes[$groupId]->attributes['timeFct'] = 0;
 		$this->nodes[$groupId]->attributes['timeExclusive'] = 0; 
@@ -178,12 +179,12 @@ class TotalGraph {
                         $this->moveCurrentNodeForward($currentId, $currentNode, $nodeId); 
 		} else {
                         $nodeId = self::getNodeId($this->treeType, $noteNb);
-                        $this->stopNodesUpUntilMatchNoteNodeId($currentId, $currentNode, $nodeId); 
+                        $this->stopNodeIfNodeIdDoesNotMatch($currentId, $currentNode, $nodeId); 
 			$currentNode->attributes[$key] = $value;
 			//echo "Set group:$key = $value".PHP_EOL;
 			if ($key === "endName") {
                             // Todo: Must check $value !== "parent". It is reserved.
-                            $this->stopNote($currentId, $currentNode, $value);
+                            $this->stopNote($currentId, $currentNode);
 			}
 		}
 	}
@@ -234,53 +235,43 @@ class TotalGraph {
 		$currentId = $nodeId;
         }
         
-        private function stopNodesUpUntilMatchNoteNodeId (&$currentId, &$currentNode, $nodeId) {
-                // Normally $currentId === $nodeId in input and the method does nothing.
-                // Otherwise, it only stops notes and move up until $currentId === $nodeId
-                // or exit on error when $currentNode->attributes['parentId'] === null (root). 
-                // Two outcomes: exit on error or $currentId === $nodeId. 
-                // In all cases, it does nothing on the final currentId node.
-            
-                // If $nodeId !== $rootId, it is an ordinary situation, which can
-                // lead to an exit on error.  
-            
-                // If $nodeId == $rootId, it can only be the artificial note 
-                // $this->noteRootId . ":node:endName=" after the loop. 
-                // In that case, it does not exit on error, because the
-                // the while loop stops with $currentId === $rootId before the
-                // error can occur. 
-
-                // The second case stops the root, but is fine, because there is no
-                // note after the loop. 
-                // Stopping the root in other cases might be useful for
-                // debugging info, but we don't do that now. Therefore, 
-                // the loop  stops with error before calling stopNote on
-                // the root, i.e., when parentId is null. 
-            
- 		while ($currentId !== $nodeId) {
-                        // No file note should have the root noteNb.  
-			echo "Stopping node $currentId by its parent "; 
-			$currentNode->attributes['endName'] = 'parent'; 
+        private function stopNodeIfNodeIdDoesNotMatch (&$currentId, &$currentNode, $nodeId) {
+                // Four cases :
+                // $currentId === $nodeId === $rootId. Typical at the end.  Nothihg is done.       
+                // $currentId === $nodeId !== $rootId. The typical situation. Nothing is done. 
+                // $currentId !== $nodeId === $rootId. 
+                //      $nodeId can only be the artificial note after the loop. 
+                //      In that case, it does not exit on error.
+                // $currentId !== $nodeId !== $rootId. 
+                //      It leads to an exit on error when currentId === rootId. 
+                                       
+ 		if ($currentId !== $nodeId) {
+                        // No file note should have the root noteNb. 
+			echo "While managing new  node $nodeId, stopping current node $currentId by its parent  "; 
                         if ( $currentNode->attributes['parentId'] === null ) {
-                            echo "Exiting before stopping the root while searching node $nodeId". PHP_EOL;
+                            echo "but exiting because the current node is  the root". PHP_EOL;
                             exit(); 
                         }
-                        $this->stopNote($currentId, $currentNode, 'parent'); 
+                        // The following mimic what is done when key = endName in process Note. 
+			$currentNode->attributes['endName'] = 'parent'; 
+                        $this->stopNote($currentId, $currentNode); 
 			echo "$currentId, which is now the new currentId.".PHP_EOL;
 		}          
         }
 
-	private function stopNote(&$currentId, &$currentNode, $endName) {
+	private function stopNote(&$currentId, &$currentNode) {
                 // It only sets the label and the exclusive time and move
                 // currentId and currentNode backward to their parent values.
-                // StopNote is the last step before the next note, which is normally for the parent. .
-                $currentNode->attributes['label'] = $currentNode->attributes['startName'] . "_". $endName;
+                $currentNode->attributes['label'] = $currentNode->attributes['startName'] . "_". 
+                                                    $currentNode->attributes['endName'];
                 $this->setExclusiveTimeOfNode($currentId); 
 		$currentId = $currentNode->attributes['parentId'];
 		if ($currentId !== null) {
 			$currentNode = $this->nodes[$currentId];
 			//echo "Moving to parent $currentId after endName $endName".PHP_EOL;
-		} elseif ($endName === 'parent')  {
+		} elseif ($currentNode->attributes['endName'] === 'parent')  {
+                  // Normally, this condition never occurs because, it only occurs wnen
+                  // we pass by stopNodeIfNodeIdDoesNotMatch and we exit in that method.   
                         echo "Error: trying to stop root with endName=parent.". PHP_EOL;
                         exit(); 
 		} else {
