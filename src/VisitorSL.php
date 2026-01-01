@@ -14,7 +14,7 @@ class VisitorSL extends AbstractVisitor {
                         $currentId, 
                         "SL", 
                         fn($childId) => 
-                            $this->totalGraph->nodes[$childId]->attributes['label']
+                            $this->totalGraph->nodes[$childId]->attributes['innerLabel']
                 ); 
         }
 }

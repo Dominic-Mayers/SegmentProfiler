@@ -4,7 +4,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-
+    app.groups_with_no_inner_nodes: '%env(json:GROUPS_WITH_NO_INNER_NODES)%'
+    
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -18,4 +19,23 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\AbstractVisitor:
+        abstract: true
+        arguments:
+            $groupsWithNoInnerNodes: '%app.groups_with_no_inner_nodes%'
+
+    App\VisitorP:
+        parent: App\AbstractVisitor
+        
+    App\VisitorSP:
+        parent: App\AbstractVisitor
+        
+    App\VisitorSl:
+        parent: App\AbstractVisitor
+        
+    App\VisitorSCL:
+        parent: App\AbstractVisitor
+        
+    App\VisitorDL:
+        parent: App\AbstractVisitor
 

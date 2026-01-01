@@ -16,15 +16,15 @@ class VisitorSCL extends AbstractVisitor {
 			if (isset($this->totalGraph->nodes[$targetId]->groupId)) {
 				continue;
 			}
-			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['label']] ??= 0;
-			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['label']] += $arrow->calls;
+			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['innerLabel']] ??= 0;
+			$childrenNames[$this->totalGraph->nodes[$targetId]->attributes['innerLabel']] += $arrow->calls;
 		}
                 if (empty($childrenNames)) {
 				return false; 
 	        }
 		ksort ($childrenNames);
-		$label = "Parents of ". implode(' & ', array_keys($childrenNames));
+		$innerLabel = "Parents of ". implode(' & ', array_keys($childrenNames));
 
-		return $label;
+		return $innerLabel;
 	}
 }

@@ -17,9 +17,9 @@ class TotalGraph {
         public array   $arrowsOut = []; 
         public array   $arrowsIn = [];
         
-        // Gives the path of each pathKey. 
-        // Set in P or SP, but paths are arrays instead of strings.
-        public array $arrayPaths = []; 
+        // Gives the treeLabel of each treeKey. 
+        // Set in P or SP, but treeLabels are arrays instead of strings.
+        public array $arrayTreeLabels = []; 
 
         public function __construct() {
             $this->rootNb = (int) $this->noteRootId; 
@@ -73,7 +73,7 @@ class TotalGraph {
 		$this->processNote($currentId, $currentNode, $this->noteRootId . ":endName=root");
 	}
 
-        public function addGroup($label, $type, $innerNodesId, $key = null) {
+        public function addGroup($innerLabel, $type, $innerNodesId, $key = null) {
                 if ( count($innerNodesId) == 1)  {
                         echo "Error: attempting to create a singleton".PHP_EOL; 
                         exit();  
@@ -82,10 +82,10 @@ class TotalGraph {
                 //echo "Added node of group $groupId." . PHP_EOL; 
                 
                 if ( isset($key) ) {
-                    $this->nodes[$groupId]->attributes['pathKey'] = $key;
+                    $this->nodes[$groupId]->attributes['treeKey'] = $key;
                 }
 
-		$this->nodes[$groupId]->attributes['label'] = $label;
+		$this->nodes[$groupId]->attributes['innerLabel'] = $innerLabel;
 		$this->nodes[$groupId]->attributes['timeFct'] = 0;
 		$this->nodes[$groupId]->attributes['timeExclusive'] = 0; 
 		foreach ($innerNodesId as $innerNodeId) {
@@ -217,7 +217,7 @@ class TotalGraph {
 		$nodeId = self::getNodeId($type, $nodeNb);
                 $this->nodes[$nodeId] = new Node($type);
 		$this->nodes[$nodeId]->attributes['nodeId'] = $nodeId;
-                //echo "Added node $nodeId with label $label".PHP_EOL; 
+                //echo "Added node $nodeId".PHP_EOL; 
                 return $nodeId; 
         }
 
@@ -260,9 +260,9 @@ class TotalGraph {
         }
 
 	private function stopNote(&$currentId, &$currentNode) {
-                // It only sets the label and the exclusive time and move
+                // It only sets the innerLabel and the exclusive time and move
                 // currentId and currentNode backward to their parent values.
-                $currentNode->attributes['label'] = $currentNode->attributes['startName'] . "_". 
+                $currentNode->attributes['innerLabel'] = $currentNode->attributes['startName'] . "_". 
                                                     $currentNode->attributes['endName'];
                 $this->setExclusiveTimeOfNode($currentId); 
 		$currentId = $currentNode->attributes['parentId'];

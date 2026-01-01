@@ -4,6 +4,12 @@ namespace App;
 use Graphp\GraphViz\GraphViz; 
 use Graphp\Graph\Graph;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use App\VisitorDefaultActiveGraph; 
+use App\VisitorP;
+use App\VisitorSP;
+use App\VisitorSL;
+use App\VisitorSCL;
+use App\VisitorDL;
 
 require_once ('Node.php');
 require_once ('Arrow.php');
@@ -30,6 +36,12 @@ class Profiler {
 	
 	public function __construct(
 		private UrlGeneratorInterface $urlGenerator,
+                private VisitorDefaultActiveGraph $visitorDefaultActiveGraph, 
+                private VisitorP $visitorP,
+                private VisitorSP $visitorSP,
+                private VisitorSL $visitorSL,
+                private VisitorSCL $visitorSCL,
+                private VisitorDL $visitorDL,
 	) {
 		$this->graphviz    = new GraphViz();
                 $this->activeGraph = new ActiveGraph(); 
@@ -240,30 +252,26 @@ class Profiler {
 		return $script; 
 	}
 
-	public function groupPerPath() {
+	public function groupPerTreeLabel() {
 		// For every non innernode, this only groups its non inner children with a same full name.
-		$visitorP = new VisitorP();
-		$traversal = new Traversal($this->totalGraph, $visitorP); 
+		$traversal = new Traversal($this->totalGraph, $this->visitorP); 
 		$traversal->visitNodes();
 	}
 
-	public function groupSiblingsPerPath() {
+	public function groupSiblingsPerTreeLabel() {
 		// For every non innernode, this only groups its non inner children with a same full name.
-		$visitorSP = new VisitorSP();
-		$traversal = new Traversal($this->totalGraph, $visitorSP); 
+		$traversal = new Traversal($this->totalGraph, $this->visitorSP); 
 		$traversal->visitNodes();
 	}
         
 	public function groupSiblingsPerLabel() {
 		// For every non innernode, this only groups its non inner children with a same full name.
-		$visitorSL = new VisitorSL();
-		$traversal = new Traversal($this->totalGraph, $visitorSL); 
+		$traversal = new Traversal($this->totalGraph, $this->visitorSL); 
 		$traversal->visitNodes();
 	}
 
 	public function groupDescendentsPerLabel() {
-		$visitorDL = new VisitorDL();
-                $traversal = new Traversal($this->totalGraph, $visitorDL); 
+                $traversal = new Traversal($this->totalGraph, $this->visitorDL); 
 		$traversal->visitNodes();
                 //echo PHP_EOL; 
 	}
@@ -271,17 +279,15 @@ class Profiler {
 	public function groupSiblingsPerChildrenLabel() {
 		// For every non innernode, this only groups its non inner children with a same full name.
                 //echo "Starting SCN".PHP_EOL."-----------".PHP_EOL; 
-		$visitorSCL = new VisitorSCL();
-                $traversal = new Traversal($this->totalGraph, $visitorSCL);
+                $traversal = new Traversal($this->totalGraph, $this->visitorSCL);
 		$traversal->visitNodes();
                 //echo PHP_EOL; 
 	}
         
         public function createDefaultActiveGraph () {
                 // To be called once we have the totalGraph, after the groups have been created. 
-                $visitorDefaultActiveGraph = new VisitorDefaultActiveGraph();
-                $visitorDefaultActiveGraph->setActiveGraph($this->activeGraph); 
-                $traversal = new Traversal($this->totalGraph, $visitorDefaultActiveGraph);
+                $this->visitorDefaultActiveGraph->setActiveGraph($this->activeGraph); 
+                $traversal = new Traversal($this->totalGraph, $this->visitorDefaultActiveGraph);
                 $traversal->visitNodes(); 
         }
         
@@ -369,7 +375,7 @@ class Profiler {
 		} else {
 			$timeTxt = "";
 		}
-		$label = $node->attributes['label'];
+		$label = $node->attributes['innerLabel'];
                 if (strlen($label) > 130) {
                     $label = substr($label, 0, 130) . "... truncated "; 
                 }

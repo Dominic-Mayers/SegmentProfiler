@@ -4,29 +4,32 @@ namespace App;
 
 abstract class AbstractVisitorP extends AbstractVisitor {
     
-        public array $paths = []; 
-        public array $pathsTranspose = []; 
+        public array $treeLabels = []; 
+        public array $treeLabelsTranspose = []; 
         
-        protected function setNewPath($currentId) {
+        protected function setNewTreeLabel($currentId) {
 
-            $adjOut = $this->totalGraph->arrowsOut[$currentId] ?? [];
-            $path = $this->totalGraph->nodes[$currentId]->attributes["label"]; 
-            foreach ( $adjOut as $childId => $arrow) {
-                $path .= "." . $this->totalGraph->nodes[$childId]->attributes["pathKey"];
-            }
-            // echo "Set pathLabel of $currentId to $pathLabel" . PHP_EOL;
+            $adjOut = $this->totalGraph->getNotInnerArrowsOut($currentId);
             
-            if ( ! isset($this->pathsTranspose[$path] ) ) { 
-                $this->paths[] = $path;
-                $key = array_key_last($this->paths);
-                $arrayPath =  explode(".", $path);
-                $this->totalGraph->arrayPaths[$key] = $arrayPath;
-                $this->pathsTranspose[$path] = $key;
-                //echo "Added new $key => $pathLabel in paths.". PHP_EOL; 
-            } else {
-                $key = $this->pathsTranspose[$path]; 
+            $treeLabel = $this->totalGraph->nodes[$currentId]->attributes["innerLabel"]; 
+            //echo "set innerLabel ". $this->totalGraph->nodes[$currentId]->attributes["innerLabel"] . " of new treeLabel." . PHP_EOL;
+            foreach ( $adjOut as $childId => $arrow) {
+                $treeLabel .= "." . $this->totalGraph->nodes[$childId]->attributes["treeKey"];
+                //echo "Append key ".  $this->totalGraph->nodes[$childId]->attributes["treeKey"] . PHP_EOL;
             }
-            $this->totalGraph->nodes[$currentId]->attributes["pathKey"] = $key;
-            return [$key, $path] ; 
+            //echo "Set treeLabel of $currentId to $treeLabel" . PHP_EOL;
+            
+            if ( ! isset($this->treeLabelsTranspose[$treeLabel] ) ) { 
+                $this->treeLabels[] = $treeLabel;
+                $key = array_key_last($this->treeLabels);
+                $arrayTreeLabel =  explode(".", $treeLabel);
+                $this->totalGraph->arrayTreeLabels[$key] = $arrayTreeLabel;
+                $this->treeLabelsTranspose[$treeLabel] = $key;
+                //echo "Added new $key => $treeLabel in treeLabels.". PHP_EOL; 
+            } else {
+                $key = $this->treeLabelsTranspose[$treeLabel]; 
+            }
+            $this->totalGraph->nodes[$currentId]->attributes["treeKey"] = $key;
+            return [$key, $treeLabel] ; 
         }    
 }

@@ -12,9 +12,9 @@ class VisitorDL extends AbstractVisitor {
         // to be created with addGroup (without the arrows).  Not sure why
         // I do not create (fully) the group as soon as identified. 
         private array $groups;
-        // This is used to create 0, 1 or more groups for each label, by resetting after each.
-        // It is a bit similar to $labelGroups in SL, but more complicated.
-        private array $labelGroups;
+        // This is used to create 0, 1 or more groups for each innerLabel, by resetting after each.
+        // It is a bit similar to $innerLabelGroups in SL, but more complicated.
+        private array $innerLabelGroups;
         private array $hasNotSingleLabel;
 
         private function createGroups() {
@@ -29,7 +29,7 @@ class VisitorDL extends AbstractVisitor {
 	}
         
 	public function init() {
-		$this->labelGroups = [];
+		$this->innerLabelGroups = [];
 		$this->groups = [];
                 $this->hasNotSingleLabel = [];
                 //echo "Starting DN".PHP_EOL."-----------".PHP_EOL;
@@ -37,29 +37,25 @@ class VisitorDL extends AbstractVisitor {
 
 	public function beforeChildren($currentId) {
 		$currentNode = $this->totalGraph->nodes[$currentId];
-		$label = $currentNode->attributes['label'];
-		$this->labelGroups[$label][] = $currentId;
-                if ( ! $this->hasSingleLabel($currentId) )
-                {
-                    $this->hasNotSingleLabel[$label] = true;     
-                }
+		$innerLabel = $currentNode->attributes['innerLabel'];
+		$this->innerLabelGroups[$innerLabel][] = $currentId;
 	}
 
 	public function afterChildren($currentId) {
 		$currentNode = $this->totalGraph->nodes[$currentId];
-		$label = $currentNode->attributes['label'];
-		if (!isset($this->labelGroups[$label])) {
+		$innerLabel = $currentNode->attributes['innerLabel'];
+		if (!isset($this->innerLabelGroups[$innerLabel])) {
 			return;
 		}
 
-		$firstInnerNodeId = $this->labelGroups[$label][0];
+		$firstInnerNodeId = $this->innerLabelGroups[$innerLabel][0];
 		if ($firstInnerNodeId === $currentId) {
-			if (count($this->labelGroups[$label]) > 1) {
-                                $type = isset($this->hasNotSingleLabel[$label]) ? "DLX" : "DL"; 
- 				$this->groups[] = $groupId = $this->totalGraph->addGroup($label, $type, $this->labelGroups[$label]); 
+			if (count($this->innerLabelGroups[$innerLabel]) > 1) {
+                                $type = isset($this->hasNotSingleLabel[$innerLabel]) ? "DLX" : "DL"; 
+ 				$this->groups[] = $groupId = $this->totalGraph->addGroup($innerLabel, $type, $this->innerLabelGroups[$innerLabel]); 
                         }
-			unset($this->labelGroups[$label]);
-                        unset($this->hasNotSingleLabel[$label]);
+			unset($this->innerLabelGroups[$innerLabel]);
+                        unset($this->hasNotSingleLabel[$innerLabel]);
 		}
 	}
 
