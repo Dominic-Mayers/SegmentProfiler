@@ -7,8 +7,7 @@ abstract class AbstractVisitor  {
         protected TotalGraph $totalGraph; 
         
         
-        public function __construct ( private $groupsWithNoInnerNodes = null) {
-            
+        public function __construct ( private $groupsWithNoInnerNodes = null) {           
         }
         
         public function setTotalGraph($totalGraph) {
@@ -33,7 +32,7 @@ abstract class AbstractVisitor  {
                                 $newGroupType = isset($hasNotSingleLabel[$innerLabel])   ? $groupType . "X": $groupType;
                                 $this->groups[] = $groupId = $this->totalGraph->addGroup($innerLabel, $newGroupType, $group);
                                 $this->totalGraph->createGroup($groupId);
-                                if ( isset($this->groupsWithNoInnerNodes[$groupType]) ) {
+                                if ( ! empty($this->groupsWithNoInnerNodes[$groupType]) ) {
                                      $this->totalGraph->removeInnerNodes($groupId);
                                 }
 			}

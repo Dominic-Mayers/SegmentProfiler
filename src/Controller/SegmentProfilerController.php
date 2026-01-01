@@ -67,11 +67,11 @@ class SegmentProfilerController extends AbstractController {
                     return;
                 }
                 $this->setTree($profiler, $input);
-                $profiler->groupSiblingsPerLabel();
-                $profiler->groupPerTreeLabel();
-                //$profiler->groupSiblingsPerTreeLabel(); 
-                //$profiler->groupSiblingsPerChildrenLabel(); 
-                //$profiler->groupDescendentsPerLabel();
+                //$profiler->groupSL();
+                $profiler->groupT();
+                //$profiler->groupST(); 
+                //$profiler->groupSCL(); 
+                //$profiler->groupDL();
 
                 $profiler->createDefaultActiveGraph();
 

@@ -2,12 +2,12 @@
 
 namespace App;
 
-abstract class AbstractVisitorP extends AbstractVisitor {
+abstract class AbstractVisitorT extends AbstractVisitor {
     
         public array $treeLabels = []; 
         public array $treeLabelsTranspose = []; 
         
-        protected function setNewTreeLabel($currentId) {
+        protected function setNewTree($currentId) {
 
             $adjOut = $this->totalGraph->getNotInnerArrowsOut($currentId);
             

@@ -8,7 +8,7 @@
 namespace App;
 
 class TotalGraph {
-        private string  $treeType = "T";
+        private string  $treeType = "A";
         private string $noteRootId = "00000";  
         private int  $rootNb; // = (int) $noteRootId 
         

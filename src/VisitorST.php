@@ -3,14 +3,14 @@
 namespace App;
 
 // Must be executed on the original tree, not sure why.    
-class VisitorSP extends AbstractVisitorP {
+class VisitorST extends AbstractVisitorT {
     
 	public function afterChildren($currentId) {
             
-            $this->setNewTreeLabel($currentId);
+            $this->setNewTree($currentId);
             $this->groupSiblingsPerCallBack(
                         $currentId, 
-                        "SP", 
+                        "ST", 
                         fn($childId) => 
                             implode(".", $this->totalGraph->arrayTreeLabels[$this->totalGraph->nodes[$childId]->attributes['treeKey']])
             );                         
