@@ -66,9 +66,10 @@ class SegmentProfilerController extends AbstractController {
                     $profiler->restoreGraphFromFile($filenameActive, true);
                     return;
                 }
+                // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
-                //$profiler->groupSL();
-                $profiler->groupT();
+                $profiler->groupSL();
+                //$profiler->groupT();
                 //$profiler->groupST(); 
                 //$profiler->groupSCL(); 
                 //$profiler->groupDL();

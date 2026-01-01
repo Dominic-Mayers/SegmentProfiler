@@ -9,23 +9,20 @@ namespace App;
 
 class TotalGraph {
         private string  $treeType = "A";
-        private string $noteRootId = "00000";  
-        private int  $rootNb; // = (int) $noteRootId 
-        
-        public string $rootId; 
-        public array   $nodes = [];
-        public array   $arrowsOut = []; 
-        public array   $arrowsIn = [];
+        private int     $rootNb = 0; // The notes start at 1. 
+        public string   $rootId; // Needed in Traversal to initiate toProcess
+        public array    $nodes = [];
+        public array    $arrowsOut = []; 
+        public array    $arrowsIn = [];
         
         // Gives the treeLabel of each treeKey. 
         // Set in P or SP, but treeLabels are arrays instead of strings.
         public array $arrayTreeLabels = []; 
 
         public function __construct() {
-            $this->rootNb = (int) $this->noteRootId; 
             $this->rootId = $this->getNodeId($this->treeType, $this->rootNb);             
         }
-
+        
         public function isGroup($nodeId) {
             return $this->nodes[$nodeId]->isGroup(); 
         }
@@ -70,7 +67,7 @@ class TotalGraph {
                         // the loop. 
 			$this->processNote($currentId, $currentNode,  $note);
 		}
-		$this->processNote($currentId, $currentNode, $this->noteRootId . ":endName=root");
+		$this->processNote($currentId, $currentNode, $this->rootNb . ":endName=root");
 	}
 
         public function addGroup($innerLabel, $type, $innerNodesId, $key = null) {
@@ -223,9 +220,9 @@ class TotalGraph {
 
         private static function getNodeId($prefix, int|null $nb) {
 		static $n = [];
-		$n[$prefix] ??= 1;
+		$n[$prefix] ??= 1; // We could start at 0. No conflicr with root. It's not used for tree nodes.  
                 $nb ??= $n[$prefix]++; 
-                $nodeId =  $prefix . str_pad($nb, 5, '0', STR_PAD_LEFT);
+                $nodeId =  $prefix . $nb;
 		return $nodeId; 
 	}
 
@@ -237,13 +234,13 @@ class TotalGraph {
         
         private function stopNodeIfNodeIdDoesNotMatch (&$currentId, &$currentNode, $nodeId) {
                 // Four cases :
-                // $currentId === $nodeId === $rootId. Typical at the end.  Nothihg is done.       
-                // $currentId === $nodeId !== $rootId. The typical situation. Nothing is done. 
-                // $currentId !== $nodeId === $rootId. 
+                // $currentId === $nodeId === Id of root. Typical at the end.  Nothihg is done.       
+                // $currentId === $nodeId !== Id of root. The typical situation. Nothing is done. 
+                // $currentId !== $nodeId === Id of root. 
                 //      $nodeId can only be the artificial note after the loop. 
                 //      In that case, it does not exit on error.
-                // $currentId !== $nodeId !== $rootId. 
-                //      It leads to an exit on error when currentId === rootId. 
+                // $currentId !== $nodeId !== Id of root. 
+                //      It leads to an exit on error when currentId === Id of root. 
                                        
  		if ($currentId !== $nodeId) {
                         // No file note should have the root noteNb. 
