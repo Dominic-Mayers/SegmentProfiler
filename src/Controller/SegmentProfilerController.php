@@ -61,18 +61,18 @@ class SegmentProfilerController extends AbstractController {
 	private function setDefaultGroups (Profiler $profiler, $input) {
                 $filenameTotal  = __DIR__ . '/../../input/Graphs/'.$input.'.totgraph'; 
                 $filenameActive = __DIR__ . '/../../input/Graphs/'.$input.'.actgraph'; 
-                if (false && file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
+                if (false & file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
                     $profiler->restoreGraphFromFile($filenameTotal,  false);
                     $profiler->restoreGraphFromFile($filenameActive, true);
                     return;
                 }
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
-                $profiler->groupSL();
-                //$profiler->groupT();
+                //$profiler->groupSL();
+                //$profiler->groupDL();
+                $profiler->groupT();
                 //$profiler->groupST(); 
                 //$profiler->groupSCL(); 
-                //$profiler->groupDL();
 
                 $profiler->createDefaultActiveGraph();
 

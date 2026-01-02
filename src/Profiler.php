@@ -284,6 +284,12 @@ class Profiler {
                 //echo PHP_EOL; 
 	}
         
+	public function groupDT( $nodeId ) {
+	}
+        
+	public function groupD( $nodeId ) {
+	}
+        
         public function createDefaultActiveGraph () {
                 // To be called once we have the totalGraph, after the groups have been created. 
                 $this->visitorDefaultActiveGraph->setActiveGraph($this->activeGraph); 

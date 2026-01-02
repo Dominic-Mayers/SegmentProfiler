@@ -11,7 +11,7 @@ class VisitorSCL extends AbstractVisitor {
 	protected function getAdjacentNames($nodeId) : bool | string {
 		$childrenNames = [];
 
-		$adj = $this->totalGraph->getNotInnerArrowsOut($nodeId);
+		$adj = $this->totalGraph->adjActiveArrowsOut($nodeId);
 		foreach ($adj as $targetId => $arrow) {
 			if (isset($this->totalGraph->nodes[$targetId]->groupId)) {
 				continue;

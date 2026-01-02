@@ -18,9 +18,9 @@ abstract class AbstractVisitor  {
         protected function groupSiblingsPerCallBack($currentId, $groupType, $innerLabelCallback) {
 
         	$innerLabelGroups = [];
-		$adj = $this->totalGraph->getNotInnerArrowsOut($currentId);
+		$adj = $this->totalGraph->adjActiveTraversalArrowsOut($currentId);
 		foreach ($adj as $targetId => $arrow) {
-                        $adjIn = $this->totalGraph->getNotInnerArrowsIn($targetId);
+                        $adjIn = $this->totalGraph->adjActiveArrowsIn($targetId);
                         if (count($adjIn) > 1) {continue;}
                         $innerLabel = $innerLabelCallback($targetId); 
                         if (!$innerLabel) { continue;}

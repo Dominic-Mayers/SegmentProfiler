@@ -12,6 +12,7 @@ class TotalGraph {
         private int     $rootNb = 0; // The notes start at 1. 
         public string   $rootId; // Needed in Traversal to initiate toProcess
         public array    $nodes = [];
+        public array    $nodesOrder = [];
         public array    $arrowsOut = []; 
         public array    $arrowsIn = [];
         
@@ -27,7 +28,25 @@ class TotalGraph {
             return $this->nodes[$nodeId]->isGroup(); 
         }
 
-        public function getNotInnerArrowsOut($sourceId) {
+        public function adjActiveTraversalArrowsOut($sourceId) {
+        // This is the same as when traversing the active graph in its original definition, just
+        // after the creation of the existing groups, but not after group desactivations.
+                $adjActiveTraversalOut = [];
+                $adjAllActiveOut = $this->adjActiveArrowsOut($sourceId);
+                foreach ($adjAllActiveOut as $targetId => $arrow) {
+                        foreach ($this->adjActiveArrowsIn($targetId) as $otherSourceId => $notUsed) {
+                            if ($this->nodesOrder[$otherSourceId] < $this->nodesOrder[$sourceId] ) {
+                                continue(2); 
+                            } 
+                        }
+			$adjActiveTraversalOut[$targetId] = $arrow;
+                }
+                return $adjActiveTraversalOut;
+        }
+        
+        public function adjActiveArrowsOut($sourceId) {
+        // This is the same as using the active graph in its original definition, just
+        // after the creation of the existing groups, but not after group desactivations.
                 $adjNotInnerOut = [];
                 $adjAllOut = $this->arrowsOut[$sourceId] ?? [];
                 foreach ($adjAllOut as $targetId => $arrow) {
@@ -38,7 +57,7 @@ class TotalGraph {
                 return $adjNotInnerOut;
         }
         
-        public function getNotInnerArrowsIn($targetId) {
+        public function adjActiveArrowsIn($targetId) {
         // This is the same as using the active graph in its original definition, just
         // after the creation of the existing groups, but not after group desactivations.
                 $adjNotInnerIn = [];
@@ -212,6 +231,7 @@ class TotalGraph {
         private function addNode($type, int|null $nodeNb = null) : string {
              
 		$nodeId = self::getNodeId($type, $nodeNb);
+                $this->nodesOrder[$nodeId] = count($this->nodes); 
                 $this->nodes[$nodeId] = new Node($type);
 		$this->nodes[$nodeId]->attributes['nodeId'] = $nodeId;
                 //echo "Added node $nodeId".PHP_EOL; 

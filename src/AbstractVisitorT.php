@@ -9,11 +9,16 @@ abstract class AbstractVisitorT extends AbstractVisitor {
         
         protected function setNewTree($currentId) {
 
-            $adjOut = $this->totalGraph->getNotInnerArrowsOut($currentId);
-            
+            // It needs to be the adjacent arrows for traversal, because the
+            // traversal method might not have set the treeKey attribute for
+            // the others. It may not be what we expect, but I cannot think
+            // of a solution.
+          
+            $adj = $this->totalGraph->adjActiveTraversalArrowsOut($currentId);
+                        
             $treeLabel = $this->totalGraph->nodes[$currentId]->attributes["innerLabel"]; 
             //echo "set innerLabel ". $this->totalGraph->nodes[$currentId]->attributes["innerLabel"] . " of new treeLabel." . PHP_EOL;
-            foreach ( $adjOut as $childId => $arrow) {
+            foreach ( $adj as $childId => $arrow) {
                 $treeLabel .= "." . $this->totalGraph->nodes[$childId]->attributes["treeKey"];
                 //echo "Append key ".  $this->totalGraph->nodes[$childId]->attributes["treeKey"] . PHP_EOL;
             }

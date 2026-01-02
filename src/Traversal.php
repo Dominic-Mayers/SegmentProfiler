@@ -28,10 +28,8 @@ class Traversal {
 			If (!isset($visited[$currentId]) || !$visited[$currentId]) {
                                 method_exists($this->visitor, "beforeChildren") && $this->visitor->beforeChildren($currentId);
 				$visited[$currentId] = true;
-				$adj = array_keys($this->totalGraph->getNotInnerArrowsOut($currentId));
-                                //echo "In " . get_class($this->visitor) . " the children of $currentId are ". json_encode($adj) .  PHP_EOL;  
-                                $adjFiltered = array_filter($adj, fn($k) => !isset($visited[$k]) || !$visited[$k], 0);
-				$toProcess = [...$adjFiltered, ...$toProcess];
+				$adjTraversal = array_keys($this->totalGraph->adjActiveTraversalArrowsOut($currentId));
+				$toProcess = [...$adjTraversal, ...$toProcess];
                                 //echo "In " . get_class($this->visitor) . " added ". json_encode($adjFiltered) . " to toProcess." . PHP_EOL;  
 			} else {
                             method_exists($this->visitor, "afterChildren") && $this->visitor->afterChildren($currentId);
