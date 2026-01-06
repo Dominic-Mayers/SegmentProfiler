@@ -44,7 +44,8 @@ class SegmentProfilerController extends AbstractController {
 			}
 		}
 		$profiler->setColorCode(); 
-                $script = $profiler->createGraphViz($input, $profiler->getSubGraph($startId), false, $toUngroup);
+                $profiler->createGraphViz($input, $profiler->getSubGraph($startId), false, $toUngroup);
+                //$script  = $this->gv->createScript($profiler->graph);
 		$svgHtml = $this->gv->createImageData($profiler->graph);
                 $url = "/js/dropdown.js"; //$this->packages->getUrl('js/dropdown.js');
 		return new Response(
@@ -55,7 +56,9 @@ class SegmentProfilerController extends AbstractController {
 	private function setTree (Profiler $profiler, $input) {
 		$this->notesFile = new \SplFileObject('../src/Fixtures/'.$input.'.profile');
         	$profiler->totalGraph->getTree($this->notesFile);
-		//$profiler->setExclusiveTime();
+                $profiler->setTreeKey();
+                $profiler->setTreeKeyWithEmpty();
+                //xdebug_break();
         }
 
 	private function setDefaultGroups (Profiler $profiler, $input) {
@@ -68,12 +71,35 @@ class SegmentProfilerController extends AbstractController {
                 }
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
-                //$profiler->groupSL();
-                //$profiler->groupDL();
-                $profiler->groupT();
-                //$profiler->groupST(); 
-                //$profiler->groupSCL(); 
-
+                $profiler->groupCTwe();
+                $profiler->groupTwe();
+                $profiler->groupCTDwe();
+                //$profiler->groupDOnce("CT19");
+                //$profiler->groupDOnce("CT20");
+                //$profiler->groupDOnce("CT23");
+                //$profiler->groupDOnce("CT369");
+                //$profiler->groupDOnce("CT976");
+                //$profiler->groupDOnce("CT1133");
+                //$profiler->groupDOnce("CT371");
+                //$profiler->groupDOnce("CT379");
+                //$profiler->groupDOnce("CT381");
+                //$profiler->groupDOnce("CT409");
+                //$profiler->groupDOnce("CT410");
+                //$profiler->groupDOnce("CT562");
+                //$profiler->groupDOnce("CT599");
+                //$profiler->groupDOnce("CT644");
+                //$profiler->groupDOnce("CT652");
+                //$profiler->groupDOnce("CT1022");
+                //$profiler->groupDOnce("CT1030");
+                //$profiler->groupDOnce("CT1359");
+                //$profiler->groupDOnce("CT1380");
+                //$profiler->groupDOnce("CT1439");
+                //$profiler->groupDOnce("CT");
+                //$profiler->groupDOnce("CT");
+                //$profiler->groupDOnce("CT");
+                //$profiler->groupDOnce("CT");
+                //$profiler->groupT();
+                
                 $profiler->createDefaultActiveGraph();
 
                 $profiler->saveGraphInFile($filenameTotal, false); 

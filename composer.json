@@ -62,6 +62,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "App\\": "src/",
             "App\\Tests\\": "tests/",
             "Codeforweb\\SegmentNotes\\": "profilecode/src/"
         }

@@ -24,18 +24,23 @@ services:
         arguments:
             $groupsWithNoInnerNodes: '%app.groups_with_no_inner_nodes%'
 
+    App\VisitorCL:
+        parent: App\AbstractVisitor
+
     App\VisitorT:
         parent: App\AbstractVisitor
         
-    App\VisitorST:
+    App\VisitorTwe:
         parent: App\AbstractVisitor
         
-    App\VisitorSL:
+    App\VisitorCT:
         parent: App\AbstractVisitor
         
-    App\VisitorSCL:
+    App\VisitorCTwe:
         parent: App\AbstractVisitor
         
-    App\VisitorDL:
+    App\VisitorCTD:
         parent: App\AbstractVisitor
 
+    App\VisitorCTDwe:
+        parent: App\AbstractVisitor

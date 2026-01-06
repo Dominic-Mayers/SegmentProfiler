@@ -3,7 +3,7 @@
 namespace App;
 
 // Must be executed on the original tree, not sure why.    
-class VisitorT extends AbstractVisitorT {
+class VisitorTwe extends AbstractVisitorT {
     
         private array $groups;
 
@@ -12,21 +12,21 @@ class VisitorT extends AbstractVisitorT {
         
 	public function afterChildren($currentId) {
 
-            $treeKey = $this->getTreeKey($currentId); 
-            $treeLabel = $this->totalGraph->treeLabels[$treeKey]; 
-            $this->groups[$treeLabel][] = $currentId;
+            $treeWithEmptyKey = $this->getTreeWithEmptyKey($currentId); 
+            $treeWithEmptyLabel = $this->totalGraph->treeWithEmptyLabels[$treeWithEmptyKey]; 
+            $this->groups[$treeWithEmptyLabel][] = $currentId;
            
             //echo "Added $currentId in group $treeLabel.". PHP_EOL; 
 	}
 
 	public function finalize () {
-            foreach ($this->groups as $treeLabel => $group) {
+            foreach ($this->groups as $treeWithEmptyLabel => $group) {
                 if (count($group) > 1 ) {
-                    $innerLabel = explode(".", $treeLabel)[0]; 
-                    $treeKey = $this->totalGraph->treeLabelsTranspose[$treeLabel];
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'T', $group, $treeKey);
+                    $innerLabel = explode(".", $treeWithEmptyLabel)[0]; 
+                    $treeWithEmptyKey = $this->totalGraph->treeWithEmptyLabelsTranspose[$treeWithEmptyLabel];
+                    $groupId = $this->totalGraph->addGroup($innerLabel, 'T', $group, $treeWithEmptyKey);
                     $this->totalGraph->createGroup($groupId);
-                    if ( ! empty($this->groupsWithNoInnerNodes['T']) ) {
+                    if ( ! empty($this->groupsWithNoInnerNodes['Twe']) ) {
                         $this->totalGraph->removeInnerNodes($groupId);
                     }
                     //echo "Added group $groupId". PHP_EOL;                     

@@ -2,7 +2,7 @@
 
 namespace App;
 
-class VisitorSL extends AbstractVisitor {
+class VisitorCL extends AbstractVisitor {
         
 	public function init() {
                 $this->newNonSingletonSin0ceLastSet = false; 
@@ -12,7 +12,7 @@ class VisitorSL extends AbstractVisitor {
 	public function beforeChildren($currentId) {
                 $this->groupSiblingsPerCallBack(
                         $currentId, 
-                        "SL", 
+                        "CL", 
                         fn($childId) => 
                             $this->totalGraph->nodes[$childId]->attributes['innerLabel']
                 ); 

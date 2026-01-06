@@ -1,0 +1,37 @@
+<?php
+
+namespace App;
+
+// Must be executed on the original tree, not sure why.    
+class VisitorDOnce extends AbstractVisitorT {
+    
+        private array $group;
+
+        public function __construct ( private $groupsWithNoInnerNodes = null) {            
+        }
+        
+        public function init() {
+            $this->group = []; 
+        }
+        
+	public function afterChildren($currentId) {
+
+            $this->group[] = $currentId;
+           
+            //echo "Added $currentId in group $treeLabel.". PHP_EOL; 
+	}
+
+	public function finalize () {
+                if (count($this->group) > 1 ) {
+                    $treeKey = $this->totalGraph->nodes[$this->group[0]]->attributes['treeKey'];
+                    $treeLabel = $this->totalGraph->treeLabels[$treeKey];
+                    $innerLabel = explode('.', $treeLabel)[0]; 
+                    $groupId = $this->totalGraph->addGroup($innerLabel, 'D', $this->group, $treeKey);
+                    $this->totalGraph->createGroup($groupId);
+                    if ( ! empty($this->groupsWithNoInnerNodes['D']) ) {
+                        $this->totalGraph->removeInnerNodes($groupId);
+                    }
+                    //echo "Added group $groupId". PHP_EOL;                     
+                }
+        }
+}

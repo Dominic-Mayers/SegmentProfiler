@@ -3,10 +3,33 @@
 namespace App;
 
 abstract class AbstractVisitorT extends AbstractVisitor {
+
+        protected function getTreeKey ($nodeId) : int {
+            if ( ! \array_key_exists('treeKey', $this->totalGraph->nodes[$nodeId]->attributes)) { 
+                if ($this->totalGraph->nodes[$nodeId]->type === 'CL' ) {
+                    echo "Type CL does not have a treeKey.".PHP_EOL; 
+                    exit();
+                } else {
+                    echo "unrecognized error" . PHP_EOL;
+                    exit(); 
+                }
+            }
+            return $this->totalGraph->nodes[$nodeId]->attributes['treeKey'];
+        }
     
-        public array $treeLabels = []; 
-        public array $treeLabelsTranspose = []; 
-        
+        protected function getTreeWithEmptyKey ($nodeId) : int {
+            if ( ! \array_key_exists('treeWithEmptyKey', $this->totalGraph->nodes[$nodeId]->attributes)) { 
+                if ($this->totalGraph->nodes[$nodeId]->type === 'CL' ) {
+                    echo "Type CL does not have a treeKey.".PHP_EOL; 
+                    exit();
+                } else {
+                    echo "unrecognized error" . PHP_EOL;
+                    exit(); 
+                }
+            }
+            return $this->totalGraph->nodes[$nodeId]->attributes['treeWithEmptyKey'];
+        }
+    
         protected function setNewTree($currentId) {
 
             // It needs to be the adjacent arrows for traversal, because the
@@ -24,17 +47,46 @@ abstract class AbstractVisitorT extends AbstractVisitor {
             }
             //echo "Set treeLabel of $currentId to $treeLabel" . PHP_EOL;
             
-            if ( ! isset($this->treeLabelsTranspose[$treeLabel] ) ) { 
-                $this->treeLabels[] = $treeLabel;
-                $key = array_key_last($this->treeLabels);
-                $arrayTreeLabel =  explode(".", $treeLabel);
-                $this->totalGraph->arrayTreeLabels[$key] = $arrayTreeLabel;
-                $this->treeLabelsTranspose[$treeLabel] = $key;
-                //echo "Added new $key => $treeLabel in treeLabels.". PHP_EOL; 
+            if ( ! isset($this->totalGraph->treeLabelsTranspose[$treeLabel] ) ) { 
+                $this->totalGraph->treeLabels[] = $treeLabel;
+                $treeKey = array_key_last($this->totalGraph->treeLabels);
+                $this->totalGraph->treeLabelsTranspose[$treeLabel] = $treeKey;
+                //echo "Added new $treeKey => $treeLabel in treeLabels.". PHP_EOL; 
             } else {
-                $key = $this->treeLabelsTranspose[$treeLabel]; 
+                $treeKey = $this->totalGraph->treeLabelsTranspose[$treeLabel]; 
             }
-            $this->totalGraph->nodes[$currentId]->attributes["treeKey"] = $key;
-            return [$key, $treeLabel] ; 
-        }    
+            $this->totalGraph->nodes[$currentId]->attributes["treeKey"] = $treeKey;
+            return [$treeKey, $treeLabel] ; 
+        }
+
+        protected function setNewTreeWithEmpty($currentId) {
+          
+            $adj = $this->totalGraph->adjActiveTraversalArrowsOut($currentId);
+            
+            if (empty ($adj)) {
+                $treeWithEmptyLabel = "e";
+            } else {
+                $treeWithEmptyLabel = $this->totalGraph->nodes[$currentId]->attributes["innerLabel"]; 
+                //echo "set innerLabel ". $this->totalGraph->nodes[$currentId]->attributes["innerLabel"] . " of new treeLabel." . PHP_EOL;
+                $prevKeyIsEmpty = false; 
+                foreach ( $adj as $childId => $arrow) {
+                    $childKey  = $this->totalGraph->nodes[$childId]->attributes["treeWithEmptyKey"]; 
+                    $toConcat = $prevKeyIsEmpty && $childKey === 'e' ? '' : ".$childKey";   
+                    $treeWithEmptyLabel .= $toConcat;  
+                    //echo "Append key ".  $this->totalGraph->nodes[$childId]->attributes["treeKey"] . PHP_EOL;
+                }
+            }
+            //echo "Set treeLabel of $currentId to $treeLabel" . PHP_EOL;
+            
+            if ( ! isset($this->totalGraph->treeWithEmptyLabelsTranspose[$treeWithEmptyLabel] ) ) { 
+                $this->totalGraph->treeWithEmptyLabels[] = $treeWithEmptyLabel;
+                $treeWithEmptyKey = array_key_last($this->totalGraph->treeWithEmptyLabels);
+                $this->totalGraph->treeWithEmptyLabelsTranspose[$treeWithEmptyLabel] = $treeWithEmptyKey;
+                //echo "Added new $treeKey => $treeLabel in treeLabels.". PHP_EOL; 
+            } else {
+                $treeWithEmptyKey = $this->totalGraph->treeWithEmptyLabelsTranspose[$treeWithEmptyLabel]; 
+            }
+            $this->totalGraph->nodes[$currentId]->attributes["treeWithEmptyKey"] = $treeWithEmptyKey;
+            return [$treeWithEmptyKey, $treeWithEmptyLabel] ; 
+        }
 }

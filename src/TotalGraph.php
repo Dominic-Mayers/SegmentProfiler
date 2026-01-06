@@ -8,7 +8,7 @@
 namespace App;
 
 class TotalGraph {
-        private string  $treeType = "A";
+        private string  $treeType = "S"; // S for segment. 
         private int     $rootNb = 0; // The notes start at 1. 
         public string   $rootId; // Needed in Traversal to initiate toProcess
         public array    $nodes = [];
@@ -16,9 +16,14 @@ class TotalGraph {
         public array    $arrowsOut = []; 
         public array    $arrowsIn = [];
         
-        // Gives the treeLabel of each treeKey. 
-        // Set in P or SP, but treeLabels are arrays instead of strings.
-        public array $arrayTreeLabels = []; 
+        // Gives treeLabel of each treeKey. Set in AbstractVisitorT::setNewTree.
+        public array $treeLabels; 
+        public array $treeLabelsTranspose; 
+        
+        public array $treeWithEmptyLabels; 
+        public array $treeWithEmptyLabelsTranspose; 
+
+        public bool $isTree = true ; 
 
         public function __construct() {
             $this->rootId = $this->getNodeId($this->treeType, $this->rootNb);             
@@ -50,7 +55,7 @@ class TotalGraph {
                 $adjNotInnerOut = [];
                 $adjAllOut = $this->arrowsOut[$sourceId] ?? [];
                 foreach ($adjAllOut as $targetId => $arrow) {
-                        if ( $this->nodes[$targetId]->groupId === null ) {
+                        if ( empty($this->nodes[$targetId]->groupId) ) {
 				$adjNotInnerOut[$targetId] = $arrow;
                         }
                 }
@@ -63,7 +68,7 @@ class TotalGraph {
                 $adjNotInnerIn = [];
                 $adjAllIn = $this->arrowsIn[$targetId] ?? [];
                 foreach ($adjAllIn as $sourceId => $arrow) {
-                        if ( $this->nodes[$sourceId]->groupId === null ) {
+                        if ( empty($this->nodes[$sourceId]->groupId) ) {
 				$adjNotInnerIn[$sourceId] = $arrow;
                         }
                 }
@@ -95,12 +100,16 @@ class TotalGraph {
                         exit();  
                 }
                 $groupId = $this->addNode($type); 
-                //echo "Added node of group $groupId." . PHP_EOL; 
+                //echo "Adding group $groupId." . PHP_EOL; 
                 
                 if ( isset($key) ) {
-                    $this->nodes[$groupId]->attributes['treeKey'] = $key;
+                    if ($type === 'T' || $type === 'CT') {
+                            $this->nodes[$groupId]->attributes['treeKey'] = $key;
+                    }
+                    if ($type === 'Twe' || $type === 'CTwe') {
+                            $this->nodes[$groupId]->attributes['treeWithEmptyKey'] = $key;
+                    }
                 }
-
 		$this->nodes[$groupId]->attributes['innerLabel'] = $innerLabel;
 		$this->nodes[$groupId]->attributes['timeFct'] = 0;
 		$this->nodes[$groupId]->attributes['timeExclusive'] = 0; 
@@ -109,8 +118,9 @@ class TotalGraph {
 			$this->nodes[$groupId]->innerNodesId[] = $innerNodeId;
 			$this->nodes[$groupId]->attributes['timeFct']       += $this->nodes[$innerNodeId]->attributes['timeFct'];
 			$this->nodes[$groupId]->attributes['timeExclusive'] += $this->nodes[$innerNodeId]->attributes['timeExclusive'];
+                        //echo "Set groupId of $innerNodeId to $groupId and time attributes of that group.". PHP_EOL; 
                 }
-                //echo "Set attributes groupId of inner nodes and innerNodesId for node $groupId". PHP_EOL; 
+                //echo "Added group $groupId.". PHP_EOL; 
 		return $groupId;
 	}
 
@@ -122,21 +132,22 @@ class TotalGraph {
 			foreach ($arrowsOut as $targetId => $arrowOut) {
 				$this->arrowsOut[$groupId][$targetId] ??= new Arrow($groupId, $targetId, 0);
 				$this->arrowsOut[$groupId][$targetId]->calls += $arrowOut->calls;
-                                //echo "Adding {$arrowOut->calls} to arrow from $groupId to $targetId because of $nodeId".PHP_EOL; 
+                                //echo "Adding {$arrowOut->calls} from added $groupId to $targetId because of its inner node $nodeId<br>".PHP_EOL;
 				$this->arrowsIn[$targetId][$groupId] = $this->arrowsOut[$groupId][$targetId];
 			}
 			$arrowsIn = $this->arrowsIn[$nodeId] ?? [];
 			foreach ($arrowsIn as $sourceId => $arrowIn) {
 				$this->arrowsOut[$sourceId][$groupId] ??= new Arrow($sourceId, $groupId, 0);
 				$this->arrowsOut[$sourceId][$groupId]->calls += $arrowIn->calls;
-                                //echo "Adding {$arrowIn->calls} to arrow from $sourceId to $groupId because of $nodeId".PHP_EOL; 
+                                //echo "Adding {$arrowIn->calls} from $sourceId to added $groupId because of its inner node $nodeId<br>".PHP_EOL;
 				$this->arrowsIn[$groupId][$sourceId] = $this->arrowsOut[$sourceId][$groupId];
 			}
 		}
 	}
 
         public function removeInnerNodes($groupId) {
-            
+                
+                if (empty($this->nodes[$groupId]) ) { return ; }
                 $group = $this->nodes[$groupId]; 
                 $innerNodesId = $group->innerNodesId??[]; 
                 foreach ($innerNodesId as $nodeId) {
