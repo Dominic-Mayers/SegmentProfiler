@@ -151,7 +151,6 @@ class TotalGraph {
                 $group = $this->nodes[$groupId]; 
                 $innerNodesId = $group->innerNodesId??[]; 
                 foreach ($innerNodesId as $nodeId) {
-                        $this->removeInnerNodes($nodeId);
                         $this->removeNode($nodeId); 
                         //echo "Removed node $nodeId.". PHP_EOL; 
                 }
@@ -183,6 +182,7 @@ class TotalGraph {
 				unset($this->arrowsIn[$targetId]);
                         }
 		}
+                $this->removeInnerNodes($nodeId);
 		unset($this->nodes[$nodeId]);
         }
         

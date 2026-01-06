@@ -17,7 +17,7 @@ abstract class AbstractVisitorT extends AbstractVisitor {
             return $this->totalGraph->nodes[$nodeId]->attributes['treeKey'];
         }
     
-        protected function getTreeWithEmptyKey ($nodeId) : int {
+        protected function getTreeWithEmptyKey ($nodeId) : int|string {
             if ( ! \array_key_exists('treeWithEmptyKey', $this->totalGraph->nodes[$nodeId]->attributes)) { 
                 if ($this->totalGraph->nodes[$nodeId]->type === 'CL' ) {
                     echo "Type CL does not have a treeKey.".PHP_EOL; 
@@ -60,11 +60,15 @@ abstract class AbstractVisitorT extends AbstractVisitor {
         }
 
         protected function setNewTreeWithEmpty($currentId) {
-          
+            // This is extreme bceause it makes the possibly empty key of all leafs actually empty. 
             $adj = $this->totalGraph->adjActiveTraversalArrowsOut($currentId);
             
             if (empty ($adj)) {
                 $treeWithEmptyLabel = "e";
+                $this->totalGraph->treeWithEmptyLabels['e'] = 'e';
+                $this->totalGraph->treeWithEmptyLabelsTranspose['e'] = 'e'; 
+                $this->totalGraph->nodes[$currentId]->attributes["treeWithEmptyKey"] = 'e';
+                return ['e', 'e'] ; 
             } else {
                 $treeWithEmptyLabel = $this->totalGraph->nodes[$currentId]->attributes["innerLabel"]; 
                 //echo "set innerLabel ". $this->totalGraph->nodes[$currentId]->attributes["innerLabel"] . " of new treeLabel." . PHP_EOL;

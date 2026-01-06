@@ -40,6 +40,7 @@ class VisitorCTDwe extends AbstractVisitorT {
                     $treeWithEmptyLabel = $this->totalGraph->treeLabels[$treeWithEmptyKey];
                     $innerLabel = explode('.', $treeWithEmptyLabel)[0]; 
                     $groupId = $this->totalGraph->addGroup($innerLabel, 'CTDwe', $group, $treeWithEmptyKey);
+                    //echo "Added group $groupId with inner nodes ". json_encode($group) . PHP_EOL ;
                     $this->totalGraph->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['CTDwe']) ) {
                         // Very unlikely, but to cover all cases ...

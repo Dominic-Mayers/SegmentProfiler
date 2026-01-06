@@ -32,7 +32,7 @@ abstract class AbstractVisitor  {
                                     $innerLabel = explode('.', $this->totalGraph->treeLabels[$treeKey])[0];
                                 } elseif ($groupType == 'CTwe' || $groupType == 'Twe') {
                                     $treeKey = $groupKey;
-                                    $innerLabel = explode('.', $this->totalGraph->treeLabels[$treeKey])[0];
+                                    $innerLabel = explode('.', $this->totalGraph->treeWithEmptyLabels[$treeKey])[0];
                                 } else {
                                     $treeKey = null;
                                     $innerLabel = $groupKey;

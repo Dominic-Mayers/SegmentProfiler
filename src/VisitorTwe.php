@@ -24,7 +24,8 @@ class VisitorTwe extends AbstractVisitorT {
                 if (count($group) > 1 ) {
                     $innerLabel = explode(".", $treeWithEmptyLabel)[0]; 
                     $treeWithEmptyKey = $this->totalGraph->treeWithEmptyLabelsTranspose[$treeWithEmptyLabel];
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'T', $group, $treeWithEmptyKey);
+                    $groupId = $this->totalGraph->addGroup($innerLabel, 'Twe', $group, $treeWithEmptyKey);
+                    //echo "Added group $groupId with ". count($group) . " inner nodes: ". json_encode($group) . PHP_EOL ;                
                     $this->totalGraph->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['Twe']) ) {
                         $this->totalGraph->removeInnerNodes($groupId);
@@ -32,5 +33,6 @@ class VisitorTwe extends AbstractVisitorT {
                     //echo "Added group $groupId". PHP_EOL;                     
                 }
             }
+            //$this->totalGraph->removeNode('Twe1');
         }
 }
