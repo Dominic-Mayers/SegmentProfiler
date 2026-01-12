@@ -9,9 +9,5 @@ class Node {
         
         public function __construct($type = "T") {
             $this->type = $type; 
-        }
-        
-        public function isGroup() {
-            return $this->groupId !== null; 
-        }
+        } 
 }

@@ -7,9 +7,14 @@ class VisitorT extends AbstractVisitorT {
     
         private array $groups;
 
-        public function __construct ( private $groupsWithNoInnerNodes = null) {            
+        public function init() {
+            if (isset ($this->groups)) {
+                echo "Error: VisitorT is not reentrant";
+                exit(); 
+            }
+            $this->groups = [];
         }
-        
+
 	public function afterChildren($currentId) {
 
             $treeKey = $this->getTreeKey($currentId); 
@@ -24,7 +29,8 @@ class VisitorT extends AbstractVisitorT {
                 if (count($group) > 1 ) {
                     $innerLabel = explode(".", $treeLabel)[0]; 
                     $treeKey = $this->totalGraph->treeLabelsTranspose[$treeLabel];
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'T', $group, $treeKey);
+                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
+                    $groupId = $this->totalGraph->addGroup($innerLabel, 'T', $group, $groupRep);
                     $this->totalGraph->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['T']) ) {
                         $this->totalGraph->removeInnerNodes($groupId);
@@ -32,5 +38,6 @@ class VisitorT extends AbstractVisitorT {
                     //echo "Added group $groupId". PHP_EOL;                     
                 }
             }
+            unset($this->groups); 
         }
 }

@@ -6,12 +6,13 @@ namespace App;
 class VisitorCTD extends AbstractVisitorT {
     
         private array $groups;
-        private ?string $currentGroupKey;
-
-        public function __construct ( private $groupsWithNoInnerNodes = null) {            
-        }
+        private bool|string $currentGroupKey;
         
         public function init() {
+            if ( isset($this->groups) || isset($this->currentGroupKey) ) {
+                echo "Error: VisitorCTD is not reentrant";
+                exit();                 
+            }
             $this->groups = []; 
             $this->currentGroupKey = null; 
         }
@@ -39,7 +40,9 @@ class VisitorCTD extends AbstractVisitorT {
                     $treeKey = $this->totalGraph->nodes[$group[0]]->attributes['treeKey'];
                     $treeLabel = $this->totalGraph->treeLabels[$treeKey];
                     $innerLabel = explode('.', $treeLabel)[0]; 
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'CTD', $group, $treeKey);
+                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
+                                              
+                    $groupId = $this->totalGraph->addGroup($innerLabel, 'CTD', $group, $groupRep);
                     $this->totalGraph->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['CTD']) ) {
                         // Very unlikely, but to cover all cases ...
@@ -48,5 +51,7 @@ class VisitorCTD extends AbstractVisitorT {
                     //echo "Added group $groupId". PHP_EOL;                     
                 }
             }
+            unset($this->groups);
+            unset($this->currentGroupKey); 
         }
 }

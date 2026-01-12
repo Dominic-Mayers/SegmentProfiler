@@ -11,6 +11,6 @@ class VisitorTreeKey extends AbstractVisitorT {
         }
         
         public function afterChildren($currentId) {
-            [$treeKey, $treeLabel] =  $this->setNewTree($currentId);
+            $this->setNewTree($currentId);
         }
 }

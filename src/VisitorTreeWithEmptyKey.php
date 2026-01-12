@@ -6,8 +6,8 @@ class VisitorTreeWithEmptyKey extends AbstractVisitorT {
 
 
         public function init() {
-            $this->totalGraph->treeWithEmptyLabelsTranspose = [];
-            $this->totalGraph->treeWithEmptyLabels = []; 
+            $this->totalGraph->treeLabelsTransposeWithEmpty = [];
+            $this->totalGraph->treeLabelsWithEmpty = []; 
         }
         
         public function afterChildren($currentId) {

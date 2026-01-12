@@ -2,24 +2,19 @@
 
 namespace App;
 
+use App\TotalGraph;
+
 class Traversal {
     
-        private AbstractVisitor $visitor;
-        private TotalGraph $totalGraph;
-        private $rootId; 
         
-        public function __construct(TotalGraph $totalGraph, AbstractVisitor $visitor, $nodeId = null) {
-                $this->visitor = $visitor;
-                $this->totalGraph = $totalGraph;
-                $this->visitor->setTotalGraph($totalGraph); 
-                $this->rootId =  $nodeId ?? $this->totalGraph->rootId; 
+        public function __construct(private TotalGraph $totalGraph) {
         }
         
-	public function visitNodes() {
-		method_exists($this->visitor, "init") && $this->visitor->init();
-		$toProcess = [$this->rootId];
+	public function visitNodes( $visitor, $rootId = null) {
+		method_exists($visitor, "init") && $visitor->init();
+                $rootId ??= $this->totalGraph->rootId; 
+		$toProcess = [$rootId];
 		$visited = [];
-                $this->totalGraph->isTree = true; 
 		while (true) {
 
 			if ($toProcess == []) {
@@ -28,19 +23,19 @@ class Traversal {
 
 			$currentId = $toProcess[0];
 
-			If (!isset($visited[$currentId]) || !$visited[$currentId]) {
-                                method_exists($this->visitor, "beforeChildren") && $this->visitor->beforeChildren($currentId);
+			If (empty($visited[$currentId])) {
+                                method_exists($visitor, "beforeChildren") && $visitor->beforeChildren($currentId);
                                 $visited[$currentId] = true;
                                 $adj = array_keys($this->totalGraph->adjActiveArrowsOut($currentId)); 
                                 $adjTraversal = array_filter($adj , fn($x) => empty($visited[$x]));
 				$toProcess = [...$adjTraversal, ...$toProcess];
-                                //echo "In " . get_class($this->visitor) . " added ". json_encode($adjFiltered) . " to toProcess." . PHP_EOL;  
+                                //echo "In " . get_class($visitor) . " added ". json_encode($adjFiltered) . " to toProcess." . PHP_EOL;  
 			} else {
-                                method_exists($this->visitor, "afterChildren") && $this->visitor->afterChildren($currentId);
+                                method_exists($visitor, "afterChildren") && $visitor->afterChildren($currentId);
                                 array_shift($toProcess);
 			}
 		}
-		method_exists($this->visitor, "finalize") && $this->visitor->finalize();
+		method_exists($visitor, "finalize") && $visitor->finalize();
 	}
         
 }

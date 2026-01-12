@@ -7,25 +7,30 @@ class VisitorTwe extends AbstractVisitorT {
     
         private array $groups;
 
-        public function __construct ( private $groupsWithNoInnerNodes = null) {            
+        public function init() {
+            if (isset ($this->groups)) {
+                echo "Error: VisitorTwe is not reentrant";
+                exit(); 
+            }
+            $this->groups = [];
         }
         
 	public function afterChildren($currentId) {
 
-            $treeWithEmptyKey = $this->getTreeWithEmptyKey($currentId); 
-            $treeWithEmptyLabel = $this->totalGraph->treeWithEmptyLabels[$treeWithEmptyKey]; 
-            $this->groups[$treeWithEmptyLabel][] = $currentId;
+            $treeKeyWithEmpty = $this->getTreeKeyWithEmpty($currentId); 
+            $treeLabelWithEmpty = $this->totalGraph->treeLabelsWithEmpty[$treeKeyWithEmpty]; 
+            $this->groups[$treeLabelWithEmpty][] = $currentId;
            
             //echo "Added $currentId in group $treeLabel.". PHP_EOL; 
 	}
 
 	public function finalize () {
-            foreach ($this->groups as $treeWithEmptyLabel => $group) {
+            foreach ($this->groups as $treeLabelWithEmpty => $group) {
                 if (count($group) > 1 ) {
-                    $innerLabel = explode(".", $treeWithEmptyLabel)[0]; 
-                    $treeWithEmptyKey = $this->totalGraph->treeWithEmptyLabelsTranspose[$treeWithEmptyLabel];
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'Twe', $group, $treeWithEmptyKey);
-                    //echo "Added group $groupId with ". count($group) . " inner nodes: ". json_encode($group) . PHP_EOL ;                
+                    $innerLabel = explode(".", $treeLabelWithEmpty)[0]; 
+                    $treeKeyWithEmpty = $this->totalGraph->treeLabelsTransposeWithEmpty[$treeLabelWithEmpty];
+                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
+                    $groupId = $this->totalGraph->addGroup($innerLabel, 'Twe', $group, $groupRep);
                     $this->totalGraph->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['Twe']) ) {
                         $this->totalGraph->removeInnerNodes($groupId);
@@ -34,5 +39,6 @@ class VisitorTwe extends AbstractVisitorT {
                 }
             }
             //$this->totalGraph->removeNode('Twe1');
+            unset($this->groups); 
         }
 }

@@ -8,8 +8,8 @@
 namespace App;
 
 class TotalGraph {
-        private string  $treeType = "S"; // S for segment. 
         private int     $rootNb = 0; // The notes start at 1. 
+        public string   $treeType = "S"; // S for segment. 
         public string   $rootId; // Needed in Traversal to initiate toProcess
         public array    $nodes = [];
         public array    $nodesOrder = [];
@@ -20,19 +20,17 @@ class TotalGraph {
         public array $treeLabels; 
         public array $treeLabelsTranspose; 
         
-        public array $treeWithEmptyLabels; 
-        public array $treeWithEmptyLabelsTranspose; 
+        public array $treeLabelsWithEmpty; 
+        public array $treeLabelsTransposeWithEmpty; 
 
-        public bool $isTree = true ; 
+        public bool  $isTree = true ; 
+        public int   $totalSaved; 
+        public array $savedGroups = [];     
 
         public function __construct() {
             $this->rootId = $this->getNodeId($this->treeType, $this->rootNb);             
         }
         
-        public function isGroup($nodeId) {
-            return $this->nodes[$nodeId]->isGroup(); 
-        }
-
         public function adjActiveTraversalArrowsOut($sourceId) {
         // This is the same as when traversing the active graph in its original definition, just
         // after the creation of the existing groups, but not after group desactivations.
@@ -94,7 +92,7 @@ class TotalGraph {
 		$this->processNote($currentId, $currentNode, $this->rootNb . ":endName=root");
 	}
 
-        public function addGroup($innerLabel, $type, $innerNodesId, $key = null) {
+        public function addGroup($innerLabel, $type, $innerNodesId, $rootRep = null) {
                 if ( count($innerNodesId) == 1)  {
                         echo "Error: attempting to create a singleton".PHP_EOL; 
                         exit();  
@@ -102,13 +100,9 @@ class TotalGraph {
                 $groupId = $this->addNode($type); 
                 //echo "Adding group $groupId." . PHP_EOL; 
                 
-                if ( isset($key) ) {
-                    if ($type === 'T' || $type === 'CT') {
-                            $this->nodes[$groupId]->attributes['treeKey'] = $key;
-                    }
-                    if ($type === 'Twe' || $type === 'CTwe') {
-                            $this->nodes[$groupId]->attributes['treeWithEmptyKey'] = $key;
-                    }
+                if ( isset($rootRep) ) {
+                        $this->nodes[$groupId]->attributes['treeKey'] = $rootRep->attributes['treeKey'];
+                        $this->nodes[$groupId]->attributes['treeKeyWithEmpty'] = $rootRep->attributes['treeKeyWithEmpty'];
                 }
 		$this->nodes[$groupId]->attributes['innerLabel'] = $innerLabel;
 		$this->nodes[$groupId]->attributes['timeFct'] = 0;

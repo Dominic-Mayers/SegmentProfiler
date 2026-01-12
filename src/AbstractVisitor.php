@@ -2,18 +2,19 @@
 
 namespace App;
 
+use App\TotalGraph; 
+
+#[Exclude]
 abstract class AbstractVisitor  {
     
         protected TotalGraph $totalGraph; 
+        private $groupsWithNoInnerNodes; 
         
-        
-        public function __construct ( private $groupsWithNoInnerNodes = null) {           
+        public function __construct ( TotalGraph $totalGraph, 
+                                      $groupsWithNoInnerNodes = null) {
+            $this->totalGraph = $totalGraph;
+            $this->groupsWithNoInnerNodes = $groupsWithNoInnerNodes; 
         }
-        
-        public function setTotalGraph($totalGraph) {
-            $this->totalGraph = $totalGraph; 
-        }
-        
         
         protected function groupSiblingsPerCallBack($currentId, $groupType, $groupKeyCallback) {
 
@@ -28,16 +29,16 @@ abstract class AbstractVisitor  {
 		foreach ($innerLabelGroups as $groupKey => $group) {
 			if (count($group) > 1) {
                                 if ($groupType == 'CT' || $groupType == 'T' ) {
-                                    $treeKey = $groupKey;
-                                    $innerLabel = explode('.', $this->totalGraph->treeLabels[$treeKey])[0];
+                                    $innerLabel = explode('.', $this->totalGraph->treeLabels[$groupKey])[0];
+                                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
                                 } elseif ($groupType == 'CTwe' || $groupType == 'Twe') {
-                                    $treeKey = $groupKey;
-                                    $innerLabel = explode('.', $this->totalGraph->treeWithEmptyLabels[$treeKey])[0];
+                                    $innerLabel = explode('.', $this->totalGraph->treeLabelsWithEmpty[$groupKey])[0];
+                                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
                                 } else {
-                                    $treeKey = null;
                                     $innerLabel = $groupKey;
+                                    $groupRep = null; 
                                 }
-                                $this->groups[] = $groupId = $this->totalGraph->addGroup($innerLabel, $groupType, $group, $treeKey);
+                                $this->groups[] = $groupId = $this->totalGraph->addGroup($innerLabel, $groupType, $group, $groupRep );
                                 $this->totalGraph->createGroup($groupId);
                                 if ( ! empty($this->groupsWithNoInnerNodes[$groupType]) ) {
                                      $this->totalGraph->removeInnerNodes($groupId);

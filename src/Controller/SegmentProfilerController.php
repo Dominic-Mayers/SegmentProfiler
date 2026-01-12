@@ -3,9 +3,9 @@
 namespace App\Controller;
 
 use App\Profiler;
+use App\TotalGraph; 
 use Graphp\GraphViz\GraphViz; 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Asset\Packages; 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -13,12 +13,13 @@ class SegmentProfilerController extends AbstractController {
 	
 	private GraphViz $gv;
 	private \SplFileObject $notesFile;
-        private Packages $packages;
 	
-	public function __construct(Packages $packages) {
-		$this->gv = new GraphViz(); 
-		$this->gv->setFormat('svg');
-                $this->packages = $packages;
+	public function __construct(
+                private TotalGraph $totalGraph,
+                private \App\ActiveGraph $activeGraph,
+        ) {
+                $this->gv = new GraphViz(); 
+                $this->gv->setFormat('svg');
 	}
 	
 	#[Route('/tree/{input}')]
@@ -55,7 +56,7 @@ class SegmentProfilerController extends AbstractController {
 
 	private function setTree (Profiler $profiler, $input) {
 		$this->notesFile = new \SplFileObject('../src/Fixtures/'.$input.'.profile');
-        	$profiler->totalGraph->getTree($this->notesFile);
+        	$this->totalGraph->getTree($this->notesFile);
                 $profiler->setTreeKey();
                 $profiler->setTreeKeyWithEmpty();
                 //xdebug_break();
@@ -72,36 +73,13 @@ class SegmentProfilerController extends AbstractController {
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
                 $profiler->groupCTwe();
-                $profiler->createDefaultActiveGraph();
+                //$profiler->createDefaultActiveGraph();
+                $profiler->groupT();
+                //$profiler->createDefaultActiveGraph();
                 $profiler->groupCTDwe();
-                //$profiler->groupCTDwe();
-                //$profiler->groupDOnce("CT19");
-                //$profiler->groupDOnce("CT20");
-                //$profiler->groupDOnce("CT23");
-                //$profiler->groupDOnce("CT369");
-                //$profiler->groupDOnce("CT976");
-                //$profiler->groupDOnce("CT1133");
-                //$profiler->groupDOnce("CT371");
-                //$profiler->groupDOnce("CT379");
-                //$profiler->groupDOnce("CT381");
-                //$profiler->groupDOnce("CT409");
-                //$profiler->groupDOnce("CT410");
-                //$profiler->groupDOnce("CT562");
-                //$profiler->groupDOnce("CT599");
-                //$profiler->groupDOnce("CT644");
-                //$profiler->groupDOnce("CT652");
-                //$profiler->groupDOnce("CT1022");
-                //$profiler->groupDOnce("CT1030");
-                //$profiler->groupDOnce("CT1359");
-                //$profiler->groupDOnce("CT1380");
-                //$profiler->groupDOnce("CT1439");
-                //$profiler->groupDOnce("CT");
-                //$profiler->groupDOnce("CT");
-                //$profiler->groupDOnce("CT");
-                //$profiler->groupDOnce("CT");
-                //$profiler->groupT();
-                
+                $profiler->findMaxSaved(); 
                 $profiler->createDefaultActiveGraph();
+                
 
                 $profiler->saveGraphInFile($filenameTotal, false); 
                 $profiler->saveGraphInFile($filenameActive, true);
