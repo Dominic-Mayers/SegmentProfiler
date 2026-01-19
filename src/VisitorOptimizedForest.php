@@ -96,7 +96,7 @@ class VisitorOptimizedForest extends AbstractVisitor {
                             unset($this->forestArrows[$childId]); 
                         }
                     }
-                    if (empty($this->forest[$nodeId]) && empty($this->forestArrows[$nodeId]) ) {
+                    if ($nodeId !== $this->totalGraph->rootId && empty($this->forest[$nodeId]) && empty($this->forestArrows[$nodeId]) ) {
                         unset($this->forestArrows[$nodeId]); 
                     }
                     
