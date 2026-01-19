@@ -30,23 +30,7 @@ class TotalGraph {
         public function __construct() {
             $this->rootId = $this->getNodeId($this->treeType, $this->rootNb);             
         }
-        
-        public function adjActiveTraversalArrowsOut($sourceId) {
-        // This is the same as when traversing the active graph in its original definition, just
-        // after the creation of the existing groups, but not after group desactivations.
-                $adjActiveTraversalOut = [];
-                $adjAllActiveOut = $this->adjActiveArrowsOut($sourceId);
-                foreach ($adjAllActiveOut as $targetId => $arrow) {
-                        foreach ($this->adjActiveArrowsIn($targetId) as $otherSourceId => $notUsed) {
-                            if ($this->nodesOrder[$otherSourceId] < $this->nodesOrder[$sourceId] ) {
-                                continue(2); 
-                            } 
-                        }
-			$adjActiveTraversalOut[$targetId] = $arrow;
-                }
-                return $adjActiveTraversalOut;
-        }
-        
+                
         public function adjActiveArrowsOut($sourceId) {
         // This is the same as using the active graph in its original definition, just
         // after the creation of the existing groups, but not after group desactivations.
@@ -71,6 +55,10 @@ class TotalGraph {
                         }
                 }
                 return $adjNotInnerIn;
+        }
+        
+        public function incomingActiveOrder($nodeId) : int {
+            return \count($this->adjActiveArrowsIn($nodeId)); 
         }
         
         public function getTree(\Iterator $notesFile, ) {

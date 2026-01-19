@@ -48,6 +48,7 @@ class SegmentProfilerController extends AbstractController {
                 $profiler->createGraphViz($input, $profiler->getSubGraph($startId), false, $toUngroup);
                 //$script  = $this->gv->createScript($profiler->graph);
 		$svgHtml = $this->gv->createImageData($profiler->graph);
+                //$svgHtml = ""; 
                 $url = "/js/dropdown.js"; //$this->packages->getUrl('js/dropdown.js');
 		return new Response(
                     '<!DOCTYPE html><html><head><script src='.$url.' defer ></script></head><body>'.$svgHtml.'</body></html>'
@@ -72,13 +73,15 @@ class SegmentProfilerController extends AbstractController {
                 }
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
-                $profiler->groupCTwe();
-                //$profiler->createDefaultActiveGraph();
-                $profiler->groupT();
-                //$profiler->createDefaultActiveGraph();
-                $profiler->groupCTDwe();
-                $profiler->findMaxSaved(); 
+                //$profiler->groupCTwe();
                 $profiler->createDefaultActiveGraph();
+                $profiler->optimizedForest(); 
+                //$profiler->groupTwe();
+                //$profiler->createDefaultActiveGraph();
+                //$profiler->groupCT();
+                //$profiler->createDefaultActiveGraph();
+                //$profiler->createDefaultActiveGraph();
+                //$profiler->groupCTDwe();
                 
 
                 $profiler->saveGraphInFile($filenameTotal, false); 

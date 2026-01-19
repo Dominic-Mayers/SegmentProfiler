@@ -6,11 +6,13 @@ namespace App;
 class VisitorCTwe extends AbstractVisitorT {
     
     
-	public function beforeChildren($currentId) {         
-            $this->groupSiblingsPerCallBack(
+	public function beforeChildren($currentId) {
+                $adj = parent::beforeChildren($currentId);             
+                $this->groupSiblingsPerCallBack(
                         $currentId, 
                         "CTwe", 
                         fn($childId) : int => $this->getTreeKeyWithEmpty($childId)  
-            );
+                );
+                return $adj; 
 	}        
 }

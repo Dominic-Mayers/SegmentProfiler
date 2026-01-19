@@ -18,14 +18,16 @@ class VisitorCTDwe extends AbstractVisitorT {
         }
         
 	public function beforeChildren($currentId) {
-            if ($this->totalGraph->nodes[$currentId]->type === 'Twe' || 
-                $this->totalGraph->nodes[$currentId]->type === 'CTwe') {
-                if ($this->currentGroupKey === false) {
-                    $this->groups[$currentId] = [];
-                    $this->currentGroupKey = $currentId; 
+                $adj = parent::beforeChildren($currentId);             
+                if ($this->totalGraph->nodes[$currentId]->type === 'Twe' || 
+                    $this->totalGraph->nodes[$currentId]->type === 'CTwe') {
+                    if ($this->currentGroupKey === false) {
+                        $this->groups[$currentId] = [];
+                        $this->currentGroupKey = $currentId; 
+                    }
+                    $this->groups[$this->currentGroupKey][] = $currentId;
                 }
-                $this->groups[$this->currentGroupKey][] = $currentId;
-            }
+                return $adj; 
 	}
         
 	public function afterChildren($currentId) {

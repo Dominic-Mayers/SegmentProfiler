@@ -18,14 +18,16 @@ class VisitorCTD extends AbstractVisitorT {
         }
         
 	public function beforeChildren($currentId) {
-            if ($this->totalGraph->nodes[$currentId]->type === 'T' || 
-                $this->totalGraph->nodes[$currentId]->type === 'CT') {
-                if ($this->currentGroupKey === null) {
-                    $this->groups[$currentId] = [];
-                    $this->currentGroupKey = $currentId; 
+                $adj = parent::beforeChildren($currentId);             
+                if ($this->totalGraph->nodes[$currentId]->type === 'T' || 
+                    $this->totalGraph->nodes[$currentId]->type === 'CT') {
+                    if ($this->currentGroupKey === null) {
+                        $this->groups[$currentId] = [];
+                        $this->currentGroupKey = $currentId; 
+                    }
+                    $this->groups[$this->currentGroupKey][] = $currentId;
                 }
-                $this->groups[$this->currentGroupKey][] = $currentId;
-            }
+                return $adj; 
 	}
         
 	public function afterChildren($currentId) {

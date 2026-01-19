@@ -344,6 +344,11 @@ class Profiler {
                 $this->traversal->visitNodes($visitorTreeWithEmptyKey); 
         }
 
+        public function optimizedForest () {
+                $visitorOptimizedForest = new VisitorOptimizedForest($this->totalGraph); 
+                $this->traversal->visitNodes($visitorOptimizedForest); 
+        }
+
         public function createDefaultActiveGraph () {
                 // To be called once we have the totalGraph, after the groups have been created. 
                 $visitorDefaultActiveGraph = new VisitorDefaultActiveGraph(

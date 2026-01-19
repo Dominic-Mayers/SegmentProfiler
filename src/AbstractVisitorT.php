@@ -36,7 +36,7 @@ abstract class AbstractVisitorT extends AbstractVisitor {
             // the others. It may not be what we expect, but I cannot think
             // of a solution.
           
-            $adj = $this->totalGraph->adjActiveTraversalArrowsOut($currentId);            
+            $adj = $this->getChildrenArrowsOut($currentId);            
             $treeLabel = $this->totalGraph->nodes[$currentId]->attributes["innerLabel"]; 
             //echo "set innerLabel ". $this->totalGraph->nodes[$currentId]->attributes["innerLabel"] . " of new treeLabel." . PHP_EOL;
             foreach ( $adj as $childId => $notused) {
@@ -61,7 +61,7 @@ abstract class AbstractVisitorT extends AbstractVisitor {
             // This is extreme bceause it makes the possibly empty key of all leafs actually empty.             
             $treeLabelWithEmpty = '';
             $prevKeyIsEmpty = false; 
-            $adj = $this->totalGraph->adjActiveTraversalArrowsOut($currentId);
+            $adj = $this->getChildrenArrowsOut($currentId);
             foreach ( $adj as $childId => $arrow) {
                     $childKey  = $this->totalGraph->nodes[$childId]->attributes["treeKeyWithEmpty"]; 
                     $toConcat = $prevKeyIsEmpty && $childKey === 0 ? '' : ".$childKey";   
