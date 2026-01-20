@@ -10,7 +10,7 @@ class VisitorTreeWithEmptyKey extends AbstractVisitorT {
             $this->totalGraph->treeLabelsWithEmpty = []; 
         }
         
-        public function afterChildren($currentId) {
+        public function afterChildrenProcess($currentId) {
             $this->setNewTreeWithEmpty($currentId);
         }
 }

@@ -15,7 +15,7 @@ class VisitorDOnce extends AbstractVisitorT {
             $this->group = []; 
         }
         
-	public function afterChildren($currentId) {
+	public function afterChildrenProcess($currentId) {
 
             $this->group[] = $currentId;
            

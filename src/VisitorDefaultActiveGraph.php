@@ -27,8 +27,7 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
                 $this->totalGraph->totalSaved = 0; 
         }
         
-        public function beforeChildren($currentId) {
-            $adj = parent::beforeChildren($currentId);             
+        public function beforeChildrenDefinition($currentId) {
             //if ($this->totalGraph->nodes[$currentId]->attributes['maxSaved']) {
             //    $saved = $this->totalGraph->nodes[$currentId]->attributes['saved']; 
             //    echo $currentId . " is a maxSaved of " . $saved . PHP_EOL;
@@ -45,10 +44,9 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
             if ( ! empty($adjArrowsOut)) {    
                 $this->activeGraph->arrowsOut[$currentId] = $adjArrowsOut;   
             }
-            return $adj;
         }
         
         public function finalize() {
-            echo "The size of active graph is " . \count($this->activeGraph->nodes) . PHP_EOL; 
+            echo "The size of active graph is " . \count($this->activeGraph->nodes) . ".". PHP_EOL; 
         }
 }

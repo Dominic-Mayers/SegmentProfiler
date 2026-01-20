@@ -23,11 +23,11 @@ class Traversal {
 
 			If (empty($visited[$currentId])) {
                                 $visited[$currentId] = true;
-                                $adj = $visitor->beforeChildren($currentId);
+                                $adj = $visitor->beforeChildrenProcess($currentId);
 				$toProcess = [...array_keys($adj), ...$toProcess];
                                 //echo "In " . get_class($visitor) . " with currentId $currentId added ". json_encode($adj) . " to toProcess." . PHP_EOL;  
 			} else {
-                                method_exists($visitor, "afterChildren") && $visitor->afterChildren($currentId);
+                                method_exists($visitor, "afterChildrenProcess") && $visitor->afterChildrenProcess($currentId);
                                 array_shift($toProcess);
 			}
 		}

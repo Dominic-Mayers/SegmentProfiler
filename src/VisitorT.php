@@ -15,7 +15,7 @@ class VisitorT extends AbstractVisitorT {
             $this->groups = [];
         }
 
-	public function afterChildren($currentId) {
+	public function afterChildrenProcess($currentId) {
 
             $treeKey = $this->getTreeKey($currentId); 
             $treeLabel = $this->totalGraph->treeLabels[$treeKey]; 

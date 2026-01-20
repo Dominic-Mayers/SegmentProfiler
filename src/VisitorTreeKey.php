@@ -10,7 +10,7 @@ class VisitorTreeKey extends AbstractVisitorT {
             $this->totalGraph->treeLabels = []; 
         }
         
-        public function afterChildren($currentId) {
+        public function afterChildrenProcess($currentId) {
             $this->setNewTree($currentId);
         }
 }

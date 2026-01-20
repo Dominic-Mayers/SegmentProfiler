@@ -17,8 +17,7 @@ class VisitorCTDwe extends AbstractVisitorT {
             $this->currentGroupKey = false; 
         }
         
-	public function beforeChildren($currentId) {
-                $adj = parent::beforeChildren($currentId);             
+	public function beforeChildrenDefinition($currentId) {
                 if ($this->totalGraph->nodes[$currentId]->type === 'Twe' || 
                     $this->totalGraph->nodes[$currentId]->type === 'CTwe') {
                     if ($this->currentGroupKey === false) {
@@ -27,10 +26,9 @@ class VisitorCTDwe extends AbstractVisitorT {
                     }
                     $this->groups[$this->currentGroupKey][] = $currentId;
                 }
-                return $adj; 
 	}
         
-	public function afterChildren($currentId) {
+	public function afterChildrenProcess($currentId) {
             if ( isset($this->currentGroupKey) && $this->currentGroupKey === $currentId  ) {
                 $this->currentGroupKey = false; 
             }

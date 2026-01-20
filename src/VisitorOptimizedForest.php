@@ -24,7 +24,7 @@ class VisitorOptimizedForest extends AbstractVisitor {
             $this->forest = []; 
         }
         
-        public function afterChildren($currentId) {
+        public function afterChildrenProcess($currentId) {
             $this->heights[$currentId] = 0; 
             $adj = $this->getChildrenArrowsOut($currentId);
             foreach ($adj as $childId => $notused) {
@@ -44,14 +44,27 @@ class VisitorOptimizedForest extends AbstractVisitor {
             $rootKey = $this->totalGraph->nodes[$this->totalGraph->rootId]->attributes['treeKey']; 
             $top = $this->forestArrows[$this->totalGraph->rootId]; 
             $removable = 0;
-            foreach ($top as $nId) {
-                $key = $this->totalGraph->nodes[$nId]->attributes['treeKey']; 
-                echo "$nId with key $key is a top of size {$this->Size[$key]}". PHP_EOL;
-                $removable += $this->Size[$key]; 
+            foreach ($top as $nodeId) {
+                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey']; 
+                $treeSize = $this->Size[$key]; 
+                $removable += $treeSize;
             }
-            echo "The size of ". $this->totalGraph->rootId . " is " . 
-                    $this->Size[$rootKey] . PHP_EOL; 
-            echo "Total removable is $removable.". PHP_EOL; 
+            /*
+            $topGroups = []; 
+            foreach ($top as $nodeId) {
+                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey']; 
+                $topGroups[$key][] = $nodeId;  
+            }
+            foreach ($top as $nodeId) {
+                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey']; 
+                $topGroupSize = \count($topGroups[$key]);
+                $treeSize = $this->Size[$key]; 
+                echo "$nodeId is a top tree with key $key of tree size $treeSize and top group size $topGroupSize.". PHP_EOL;
+            }
+            */
+            $nbGroups = \count($this->forest);
+            $nbAlias = \count($top);
+            echo "There are $removable removable nodes, replaced by $nbAlias aliases toward $nbGroups top subtrees.". PHP_EOL; 
         }
 
         private function setGroupsAndSize ($level) {
@@ -72,15 +85,15 @@ class VisitorOptimizedForest extends AbstractVisitor {
                 foreach($level as $nodeId) {
                     $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey'];
                     //echo "Placing $nodeId with key $key". PHP_EOL; 
-                    if (isset($this->forest[$key])) {
-                        //echo "Key $key already in forest" . PHP_EOL; 
+                    if (isset($this->forest[$key]) && is_array($this->forest[$key])) {
+                        //echo "Key $key already in forest" . PHP_EOL;
+                        $this->forest[$key][] = $nodeId; 
                         continue; 
                     }
                     if ( ($this->Size[$key] - 1)*(\count($this->groups[$key]) - 1)  > 1 ) {
-                        $this->forest[$key] = true;
-                        echo "Added ". str_pad(\count($this->groups[$key]), 4) . "trees of size " .  
-                              str_pad($this->Size[$key],4) . "in group with key " . str_pad($key,4) .  PHP_EOL;
-                        //$this->reducedSize[$key] = 1; 
+                        $this->forest[$key] = [$nodeId];
+                        //echo "Added ". str_pad(\count($this->groups[$key]), 4) . "trees of size " .  
+                        //      str_pad($this->Size[$key],4) . "in group with key " . str_pad($key,4) .  PHP_EOL;
                     }
                     $this->forestArrows[$nodeId] = []; 
                     $adj = $this->getChildrenArrowsOut($nodeId);

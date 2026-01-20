@@ -15,7 +15,7 @@ class VisitorTwe extends AbstractVisitorT {
             $this->groups = [];
         }
         
-	public function afterChildren($currentId) {
+	public function afterChildrenProcess($currentId) {
 
             $treeKeyWithEmpty = $this->getTreeKeyWithEmpty($currentId); 
             $treeLabelWithEmpty = $this->totalGraph->treeLabelsWithEmpty[$treeKeyWithEmpty]; 

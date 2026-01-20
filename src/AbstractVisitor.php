@@ -16,26 +16,32 @@ abstract class AbstractVisitor  {
                 $this->groupsWithNoInnerNodes = $groupsWithNoInnerNodes; 
         }
         
-        public function beforeChildren($currentId) {
-                return $this->setChildrenArrowsOut($currentId);
+        public function beforeChildrenProcess($currentId) {
+                if (method_exists($this, 'beforeChildrenDefinition')) {
+                    $this->beforeChildrenDefinition($currentId);
+                }
+                $adj = $this->setChildrenArrowsOut($currentId);
+                if (method_exists($this, 'afterChildrenDefinition')) {
+                    $this->afterChildrenDefinition($currentId);
+                }
+                return $adj; 
         }
-        
+                
         public function getChildrenArrowsOut($currentId) {
                 if (isset($this->childrenArrowsOut[$currentId])) {
                     return $this->childrenArrowsOut[$currentId]; 
                 } else {
-                    echo "Children arrows for $currentId are not set yet."; 
+                    echo "Children arrows for $currentId are not set yet. Try setChildrenArrowsOut, especially in an beforeChildrenDefinition method." . PHP_EOL;
+                    exit(); 
                 }
         }
 
         protected function setChildrenArrowsOut($currentId) {
-        // This is intended to be called in the beforeChildren method .
+        // This is intended to be called once per currentId in the beforeChildren method.
                 if (isset($this->childrenArrowsOut[$currentId])) {
-                    echo "Children arrows for $currentId already set.";
+                    echo "Children arrows for $currentId already set. Try getChildrenArrowsOut, especially in an afterChildrenDefinition or an afterChildrenProcess method.";
                     exit(); 
                 }
-                //$this->childrenArrowsOut[$currentId] = $this->totalGraph->adjActiveArrowsOut($currentId);  
-                //return $this->totalGraph->adjActiveArrowsOut($currentId); 
                 $currentChildrenArrowsOut = [];
                 $adjAllActiveOut = $this->totalGraph->adjActiveArrowsOut($currentId);
                 foreach ($adjAllActiveOut as $targetId => $arrow) {
@@ -44,13 +50,14 @@ abstract class AbstractVisitor  {
                                 $currentChildrenArrowsOut[$targetId] = $arrow;
                         }
                 }
+                // That's the only place the property is set.
                 $this->childrenArrowsOut[$currentId] = $currentChildrenArrowsOut;  
                 return $currentChildrenArrowsOut;
         }
         
         protected function groupSiblingsPerCallBack($currentId, $groupType, $groupKeyCallback) {
         	$innerLabelGroups = [];
-		$adj = $this->getChildrenArrowsOut($currentId);
+		$adj = $this->totalGraph->adjActiveArrowsOut($currentId);
 		foreach ($adj as $targetId => $arrow) {
                         $adjIn = $this->totalGraph->adjActiveArrowsIn($targetId);
                         if (count($adjIn) > 1) {continue;}
