@@ -17,8 +17,8 @@ class VisitorTwe extends AbstractVisitorT {
         
 	public function afterChildrenProcess($currentId) {
 
-            $treeKeyWithEmpty = $this->getTreeKeyWithEmpty($currentId); 
-            $treeLabelWithEmpty = $this->totalGraph->treeLabelsWithEmpty[$treeKeyWithEmpty]; 
+            $key = $this->getTreeKey($currentId, 'treeKeyWithEmpty'); 
+            $treeLabelWithEmpty = $this->totalGraph->treeLabels['treeKeyWithEmpty'][$key]; 
             $this->groups[$treeLabelWithEmpty][] = $currentId;
            
             //echo "Added $currentId in group $treeLabel.". PHP_EOL; 
@@ -28,7 +28,6 @@ class VisitorTwe extends AbstractVisitorT {
             foreach ($this->groups as $treeLabelWithEmpty => $group) {
                 if (count($group) > 1 ) {
                     $innerLabel = explode(".", $treeLabelWithEmpty)[0]; 
-                    $treeKeyWithEmpty = $this->totalGraph->treeLabelsTransposeWithEmpty[$treeLabelWithEmpty];
                     $groupRep = $this->totalGraph->nodes[$group[0]]; 
                     $groupId = $this->totalGraph->addGroup($innerLabel, 'Twe', $group, $groupRep);
                     $this->totalGraph->createGroup($groupId);

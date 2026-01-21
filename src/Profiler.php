@@ -253,10 +253,6 @@ class Profiler {
 	}
 
 	public function groupT() {
-                if (! $this->totalGraph->isTree ) {
-                    echo "Group by T is only possible on a tree." . PHP_EOL;
-                    exit(); 
-                }
                 $visitorT = new VisitorT(
                         $this->totalGraph,
                         $this->groupsWithNoInnerNodes); 
@@ -264,10 +260,6 @@ class Profiler {
 	}
 
 	public function groupTwe() {
-                if (! $this->totalGraph->isTree ) {
-                    echo "Group by Twe is only possible on a tree." . PHP_EOL;
-                    exit(); 
-                }
                 $visitorTwe = new VisitorTwe(
                         $this->totalGraph,
                         $this->groupsWithNoInnerNodes); 
@@ -275,10 +267,6 @@ class Profiler {
 	}
 
         public function groupCT() {
-                if (! $this->totalGraph->isTree ) {
-                    echo "Group by CTwe is only possible on a tree." . PHP_EOL;
-                    exit(); 
-                }
                 $visitorCT = new VisitorCT(
                         $this->totalGraph,
                         $this->groupsWithNoInnerNodes); 
@@ -286,10 +274,6 @@ class Profiler {
 	}
         
         public function groupCTwe() {
-                if (! $this->totalGraph->isTree ) {
-                    echo "Group by CT is only possible on a tree." . PHP_EOL;
-                    exit(); 
-                }
 		// For every non innernode, this only groups its non inner children with a same full name.
 		$visitorCTwe = new VisitorCTwe(
                         $this->totalGraph,
@@ -298,10 +282,6 @@ class Profiler {
 	}
 
         public function groupCL() {
-                if (! $this->totalGraph->isTree ) {
-                    echo "Group by CL is only possible on a tree." . PHP_EOL;
-                    exit(); 
-                }
 		// For every non innernode, this only groups its non inner children with a same full name.
 		$visitorCL = new VisitorCL(
                         $this->totalGraph,

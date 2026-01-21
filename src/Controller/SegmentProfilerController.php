@@ -58,8 +58,8 @@ class SegmentProfilerController extends AbstractController {
 	private function setTree (Profiler $profiler, $input) {
 		$this->notesFile = new \SplFileObject('../src/Fixtures/'.$input.'.profile');
         	$this->totalGraph->getTree($this->notesFile);
-                $profiler->setTreeKey();
                 $profiler->setTreeKeyWithEmpty();
+                $profiler->setTreeKey();
                 //xdebug_break();
         }
 

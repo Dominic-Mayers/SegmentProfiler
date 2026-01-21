@@ -9,7 +9,7 @@ class VisitorCTwe extends AbstractVisitorT {
                 $this->groupSiblingsPerCallBack(
                         $currentId, 
                         "CTwe", 
-                        fn($childId) : int => $this->getTreeKeyWithEmpty($childId)  
+                        fn($childId) : int => $this->getTreeKey($childId, 'treeKeyWithEmpty')  
                 );
 	}        
 }

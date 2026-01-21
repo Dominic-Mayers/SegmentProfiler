@@ -8,27 +8,20 @@
 namespace App;
 
 class TotalGraph {
-        private int     $rootNb = 0; // The notes start at 1. 
         public string   $treeType = "S"; // S for segment. 
         public string   $rootId; // Needed in Traversal to initiate toProcess
         public array    $nodes = [];
-        public array    $nodesOrder = [];
         public array    $arrowsOut = []; 
-        public array    $arrowsIn = [];
-        
-        // Gives treeLabel of each treeKey. Set in AbstractVisitorT::setNewTree.
-        public array $treeLabels; 
-        public array $treeLabelsTranspose; 
-        
-        public array $treeLabelsWithEmpty; 
-        public array $treeLabelsTransposeWithEmpty; 
+        public array    $arrowsIn = [];        
+        // For each type of treeKey, gives the treeLabel for each treeKey. 
+        // Set in AbstractVisitorT::setNewTree.
+        public array    $treeLabels; 
+        public array    $treeLabelsTranspose; 
 
-        public bool  $isTree = true ; 
-        public int   $totalSaved; 
-        public array $savedGroups = [];     
-
+        private int     $rootNb = 0; // The notes start at 1. 
+        
         public function __construct() {
-            $this->rootId = $this->getNodeId($this->treeType, $this->rootNb);             
+            $this->rootId = $this->getNodeId($this->treeType, $this->rootNb);
         }
                 
         public function adjActiveArrowsOut($sourceId) {
@@ -224,7 +217,6 @@ class TotalGraph {
         private function addNode($type, int|null $nodeNb = null) : string {
              
 		$nodeId = self::getNodeId($type, $nodeNb);
-                $this->nodesOrder[$nodeId] = count($this->nodes); 
                 $this->nodes[$nodeId] = new Node($type);
 		$this->nodes[$nodeId]->attributes['nodeId'] = $nodeId;
                 //echo "Added node $nodeId".PHP_EOL; 

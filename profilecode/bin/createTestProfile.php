@@ -1,67 +1,65 @@
 <?php 
 
-function createRootNode($nodeLabels, $child_range, $level, $sizePerLevel) {
-    $subforest = generateForest ($nodeLabels, $child_range, $level-1, $sizePerLevel);
-    return createRootOverSubforest($nodeLabels, $child_range, $level, $subforest);
+function createRootNode($labels, $topTreeSize,  $child_range, $level, $forestSizePerLevel) {
+    $subforest = generateForest ($labels, $topTreeSize,  $child_range, $level-1, $forestSizePerLevel);
+    fwrite(STDERR, "Subforest root keys: "); 
+    foreach($subforest as $node) {fwrite(STDERR, $node['key'] . "|");} 
+    fwrite(STDERR, PHP_EOL); 
+    return createRootOverSubforest($labels, $topTreeSize, $child_range, $level, $subforest);
 }
 
-function createRootOverSubforest($nodeLabels, $child_range, $level, $subforest) {
-    static $nodeId = 0;
+function createRootOverSubforest($labels, $topTreeSize, $child_range, $level, $subforest) {
+    //static $nodeId = 0;
     if ($level < 1) {
         fwrite(STDERR, "Error: tree levels start at 1.". PHP_EOL); 
     }
-    $labels = $nodeLabels;
     if (empty($labels)) { fwrite(STDERR, "Error: At the least one label is needed." . PHP_EOL); exit();  } 
-    $nodeId++; 
-    $node['label'] = array_shift($labels);
+    //$nodeId++; 
+    $node['label'] = $labels[mt_rand(0, \count($labels)-1)];
     if ($node['label'] === '__K__') {
         if ($level === 1) {
             // Normally, there should be no '__K__' at level 1. 
             // We just manage '__K__' as a leaf with label 'K'.
             $node['label'] = 'K';
             $node['children'] = [];
-            $node['id'] = 'S' . $nodeId; 
+            //$node['id'] = 'S' . $nodeId; 
         } else {
             $k = mt_rand(0, \count($subforest) -1);
-            $node = $subforest[$k];                
+            $node = $subforest[$k]; 
         }
         return $node;
     } 
-    $node['id'] = 'S' . $nodeId; 
-    $childLabelsList = [];
-    foreach ($labels as $label) {
-        $t = mt_rand($child_range[0], $child_range[1] );
-        $childLabelsList[$t][] = $label;  
+    //$node['id'] = 'S' . $nodeId; 
+    $node['children'] = [];
+    $nbChildren = mt_rand($child_range[0], $child_range[1]); 
+    if ($nbChildren === 0 ) {
+        return $node;  
+    } else {
+        $num = starAndBar($nbChildren, $topTreeSize); 
+        foreach ( $num as $childTopTreeSize) {
+            if ($childTopTreeSize >0) {
+                $node['children'][] =  createRootOverSubforest($labels, $childTopTreeSize, $child_range, $level, $subforest);
+            }
+        }
+        return $node; 
     }
-    $node['children'] = []; 
-    foreach ($childLabelsList as $childLabels) {
-        if (empty($childLabels)) {continue;}  
-        $node['children'][] =  createRootOverSubforest($childLabels, $child_range, $level, $subforest); 
-    }
-    return $node; 
 }
 
-function generateForest ($nodeLabels, $child_range, $level, $sizePerLevel) {
+function generateForest ($labels, $topTreeSize,  $child_range, $level, $forestSizePerLevel) {
     // Level n forest  = a provided level n-1 subforest + $sizePerLevel level n trees computed above that subforest. 
     // Level 0 forest  = empty array. 
     // So we need the code for a level n trees computed above a n-1 subforest. 
     // The case $n = 1 (level 1 tree and forest) must be managed separately. 
     
     if ($level === 0) {return [];}
-    $forest = $subforest = generateForest ($nodeLabels, $child_range, $level-1, $sizePerLevel); 
-    for ($i=0; $i < $sizePerLevel; $i++) {
-        $forest[] = createRootOverSubforest($nodeLabels, $child_range, $level, $subforest); 
+    $forest = $subforest = generateForest ($labels, $topTreeSize, $child_range, $level-1, $forestSizePerLevel); 
+    for ($i=0; $i < $forestSizePerLevel; $i++) {
+        $treeRoot = createRootOverSubforest($labels, $topTreeSize, $child_range, $level, $subforest);
+        $k = \count($forest); 
+        $treeRoot['key']= $k; 
+        $forest[] = $treeRoot; 
     }
     return $forest;     
-}
-
-function generateLabels ($rootLabel, $possibleChildLabels, $size) {
-    $labels= [$rootLabel];
-    for ($i=0; $i < $size; $i++) {
-        $l = mt_rand(0, \count($possibleChildLabels)-1); 
-        $labels[] = $possibleChildLabels[$l]; 
-    }
-    return $labels; 
 }
 
 function createProfile($node) {
@@ -83,6 +81,16 @@ function createProfile($node) {
     }
 }
 
-$labels = generateLabels('R', ['A', 'B', 'C', '__K__'], 10);
-$node = createRootNode($labels, [0,3], 3, 3); 
+function starAndBar($k, $n ) {
+    if ($k === 1) {return [$n];} 
+    for ($i = 0; $i < $k-1; $i++ ) { $l[$i] = mt_rand(0, $n); }
+    sort($l);
+    array_unshift($l, 0);
+    $l[$k] = $n;         
+    for ($i = 0; $i < $k; $i++ ) { $num[$i] = $l[$i+1] - $l[$i]; }
+    return $num; 
+}
+
+$labels = ['A', 'B', 'C', '__K__'];
+$node = createRootNode($labels, 10,  [1,3], 3, 3); 
 createProfile($node); 

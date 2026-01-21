@@ -17,7 +17,7 @@ class VisitorT extends AbstractVisitorT {
 
 	public function afterChildrenProcess($currentId) {
 
-            $treeKey = $this->getTreeKey($currentId); 
+            $treeKey = $this->getTreeKey($currentId, 'treeKey'); 
             $treeLabel = $this->totalGraph->treeLabels[$treeKey]; 
             $this->groups[$treeLabel][] = $currentId;
            
@@ -28,7 +28,6 @@ class VisitorT extends AbstractVisitorT {
             foreach ($this->groups as $treeLabel => $group) {
                 if (count($group) > 1 ) {
                     $innerLabel = explode(".", $treeLabel)[0]; 
-                    $treeKey = $this->totalGraph->treeLabelsTranspose[$treeLabel];
                     $groupRep = $this->totalGraph->nodes[$group[0]]; 
                     $groupId = $this->totalGraph->addGroup($innerLabel, 'T', $group, $groupRep);
                     $this->totalGraph->createGroup($groupId);

@@ -67,10 +67,11 @@ abstract class AbstractVisitor  {
 		foreach ($innerLabelGroups as $groupKey => $group) {
 			if (count($group) > 1) {
                                 if ($groupType == 'CT' || $groupType == 'T' ) {
-                                    $innerLabel = explode('.', $this->totalGraph->treeLabels[$groupKey])[0];
+                                    $innerLabel = explode('.', $this->totalGraph->treeLabels['treeKey'][$groupKey])[0];
                                     $groupRep = $this->totalGraph->nodes[$group[0]]; 
                                 } elseif ($groupType == 'CTwe' || $groupType == 'Twe') {
-                                    $innerLabel = explode('.', $this->totalGraph->treeLabelsWithEmpty[$groupKey])[0];
+                                    $treeLabel = $this->totalGraph->treeLabels['treeKeyWithEmpty'][$groupKey]; 
+                                    $innerLabel = explode('.', $treeLabel)[0];
                                     $groupRep = $this->totalGraph->nodes[$group[0]]; 
                                 } else {
                                     $innerLabel = $groupKey;

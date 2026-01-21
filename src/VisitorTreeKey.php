@@ -6,11 +6,11 @@ class VisitorTreeKey extends AbstractVisitorT {
 
 
         public function init() {
-            $this->totalGraph->treeLabelsTranspose = [];
-            $this->totalGraph->treeLabels = []; 
+            $this->totalGraph->treeLabelsTranspose['treeKey'] = [];
+            $this->totalGraph->treeLabels['treeKey'] = []; 
         }
         
         public function afterChildrenProcess($currentId) {
-            $this->setNewTree($currentId);
+            $this->setNewTree($currentId, 'treeKey');
         }
 }

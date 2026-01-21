@@ -44,8 +44,10 @@ class VisitorOptimizedForest extends AbstractVisitor {
             $rootKey = $this->totalGraph->nodes[$this->totalGraph->rootId]->attributes['treeKey']; 
             $top = $this->forestArrows[$this->totalGraph->rootId]; 
             $removable = 0;
-            foreach ($top as $nodeId) {
-                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey']; 
+            $topKey = []; 
+            foreach( $top as $nodeId ) {
+                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey'];
+                $topKey[$key] = true; 
                 $treeSize = $this->Size[$key]; 
                 $removable += $treeSize;
             }
@@ -62,7 +64,7 @@ class VisitorOptimizedForest extends AbstractVisitor {
                 echo "$nodeId is a top tree with key $key of tree size $treeSize and top group size $topGroupSize.". PHP_EOL;
             }
             */
-            $nbGroups = \count($this->forest);
+            $nbGroups = \count($topKey);
             $nbAlias = \count($top);
             echo "There are $removable removable nodes, replaced by $nbAlias aliases toward $nbGroups top subtrees.". PHP_EOL; 
         }
