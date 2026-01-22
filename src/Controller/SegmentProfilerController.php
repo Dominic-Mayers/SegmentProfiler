@@ -73,7 +73,7 @@ class SegmentProfilerController extends AbstractController {
                 }
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
-                $profiler->groupCTwe();
+                //$profiler->groupCTwe();
                 $profiler->createDefaultActiveGraph();
                 $profiler->optimizedForest(); 
                 //$profiler->groupTwe();
