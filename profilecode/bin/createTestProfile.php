@@ -7,14 +7,13 @@
  * to generate a subforest, $level reduces. In the base case, $level = 0, it
  * retuns the empty forest [] without recursively calling itself to generate a
  * subforest. GenerateForest is never called thereafter. When it calls 
- * createRootOverSubforest, it only passes the subforest and $topTreeSize, not
+ * createRootOverSubforest, it passes the subforest (and $topTreeSize, etc), not
  * the level. The forest is constant when it calls itself, but the value of
- * $topTreeSize reduces, because it gets split among $nbChildren. The base case
- * is either 0 or 1. When $topTreeSize is 1, it creates a leaf. When
- * $topTreeSize is 0 and the forest is not empty, it picks a tree at random in
- * the forest with no need to compute any children or to create any new node.
- * The case where topTreeSize is 0 and there is no forest requires the notion
- * of null tree.   
+ * $topTreeSize reduces, because it gets split among $nbChildren and the root. 
+ * The base case is 0. When $topTreeSize is 0 and the forest is not empty, it
+ * picks a tree at random in the forest with no need to compute any children or
+ * to create any new node. The case where topTreeSize is 0 and the forest is
+ * empty requires the notion of a null tree.   
  * .
  * In  GenerateForest 
  */
@@ -29,7 +28,7 @@ function createRootNode($labels, $topTreeSize,  $child_range, $forestLevel, $for
 function createRootOverSubforest($labels, $topTreeSize, $child_range, $subforest) {
     //static $nodeId = 0;
     if ( $child_range[0] === 0 ) {
-        fwrite(STDERR, "Error: the no children case is determined by the code. The range must start at 1 or higher.". PHP_EOL);
+        fwrite(STDERR, "Error: the no child case is determined by the code. The range must start at 1 or higher.". PHP_EOL);
         exit(); 
     }
     if ( $child_range[1] === 1 ) {
@@ -47,12 +46,6 @@ function createRootOverSubforest($labels, $topTreeSize, $child_range, $subforest
     }
     if ($topTreeSize === 0 && empty($subforest)) {
         return null;         
-    }
-    if ($topTreeSize === 1) {
-        $node['label'] = 'L';
-        $node['key'] = '';
-        $node['children'] = []; 
-        return $node;         
     }
     $node['label'] = $labels[mt_rand(0, \count($labels)-1)];
     $node['children'] = [];
