@@ -3,27 +3,22 @@
 namespace App;
 
 // Must be executed on the original tree, not sure why.    
-class VisitorCTD extends AbstractVisitorT {
+class VisitorTTweD extends AbstractVisitorT {
     
         private array $groups;
-        private bool|string $currentGroupKey;
+        private $currentGroupKey;
         
         public function init() {
-            if ( isset($this->groups) || isset($this->currentGroupKey) ) {
-                echo "Error: VisitorCTD is not reentrant";
-                exit();                 
-            }
             $this->groups = []; 
             $this->currentGroupKey = null; 
         }
         
 	public function beforeChildrenDefinition($currentId) {
-                if ($this->totalGraph->nodes[$currentId]->type === 'T' || 
-                    $this->totalGraph->nodes[$currentId]->type === 'CT') {
-                    if ($this->currentGroupKey === null) {
-                        $this->groups[$currentId] = [];
+                if (!empty($this->totalGraph->nodes[$currentId]->attributes['TKwe']) && $this->currentGroupKey === null) {
                         $this->currentGroupKey = $currentId; 
-                    }
+                        $this->groups[$this->currentGroupKey] = [];
+                }
+                if ( $this->currentGroupKey !== null) {
                     $this->groups[$this->currentGroupKey][] = $currentId;
                 }
 	}
@@ -37,14 +32,14 @@ class VisitorCTD extends AbstractVisitorT {
 	public function finalize () {
             foreach( $this->groups as $group) {
                 if (count($group) > 1 ) {
-                    $treeKey = $this->totalGraph->nodes[$group[0]]->attributes['treeKey'];
-                    $treeLabel = $this->totalGraph->treeLabels[$treeKey];
+                    $treeKey = $this->totalGraph->nodes[$group[0]]->attributes['treeKeyWithEmpty'];
+                    $treeLabel = $this->totalGraph->treeLabels['treeKeyWithEmpty'][$treeKey];
                     $innerLabel = explode('.', $treeLabel)[0]; 
                     $groupRep = $this->totalGraph->nodes[$group[0]]; 
                                               
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'CTD', $group, $groupRep);
+                    $groupId = $this->totalGraph->addGroup($innerLabel, 'TTweD', $group, $groupRep);
                     $this->totalGraph->createGroup($groupId);
-                    if ( ! empty($this->groupsWithNoInnerNodes['CTD']) ) {
+                    if ( ! empty($this->groupsWithNoInnerNodes['TTweD']) ) {
                         // Very unlikely, but to cover all cases ...
                         $this->totalGraph->removeInnerNodes($groupId);
                     }

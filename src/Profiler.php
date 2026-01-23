@@ -14,7 +14,7 @@ use App\VisitorCT;
 use App\VisitorCTwe;
 use App\VisitorCL;
 use App\VisitorCTD;
-use App\VisitorCTDwe;
+use App\VisitorCTweD;
 use App\VisitorDOnce;
 use App\VisitorTreeKey;
 use App\VisitorTreeWithEmptyKey;
@@ -152,6 +152,14 @@ class Profiler {
                 if (empty($startId)) {
                     return [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId]; 
                 }
+                if ($this->activeGraph->nodes[$startId]->type=== 'TTD' || 
+                    $this->activeGraph->nodes[$startId]->type=== 'TTweD')
+                {
+                    $newStartId = $this->activeGraph->nodes[$startId]->innerNodesId[0];
+                    $this->deactivateGroup($startId);
+                    $this->setColorCode(); 
+                    $startId = $newStartId;                    
+                }
 		$arrows ??= $this->activeGraph->arrowsOut;
 		$subArrows = [];
 		$subNodes  = [];
@@ -252,20 +260,6 @@ class Profiler {
 		}
 	}
 
-	public function groupT() {
-                $visitorT = new VisitorT(
-                        $this->totalGraph,
-                        $this->groupsWithNoInnerNodes); 
-		$this->traversal->visitNodes( $visitorT);
-	}
-
-	public function groupTwe() {
-                $visitorTwe = new VisitorTwe(
-                        $this->totalGraph,
-                        $this->groupsWithNoInnerNodes); 
-		$this->traversal->visitNodes($visitorTwe);
-	}
-
         public function groupCT() {
                 $visitorCT = new VisitorCT(
                         $this->totalGraph,
@@ -281,38 +275,33 @@ class Profiler {
 		$this->traversal->visitNodes($visitorCTwe);
 	}
 
-        public function groupCL() {
-		// For every non innernode, this only groups its non inner children with a same full name.
-		$visitorCL = new VisitorCL(
+        public function groupT() {
+                $visitorT = new VisitorT(
                         $this->totalGraph,
                         $this->groupsWithNoInnerNodes); 
-		$this->traversal->visitNodes($visitorCL);
+		$this->traversal->visitNodes( $visitorT);
 	}
-        
-	public function groupCTD() {
-                $visitorCTD = new VisitorCTD(
+
+	public function groupTwe() {
+                $visitorTwe = new VisitorTwe(
+                        $this->totalGraph,
+                        $this->groupsWithNoInnerNodes); 
+		$this->traversal->visitNodes($visitorTwe);
+	}
+       
+	public function groupTTD() {
+                $visitorTTD = new VisitorTTD(
                         $this->totalGraph,
                         $this->groupsWithNoInnerNodes);
-                $this->traversal->visitNodes($visitorCTD);                 
-	}
+                $this->traversal->visitNodes($visitorTTD);                 
+	}        
 
-	public function groupCTDwe() {
-                $visitorCTDwe = new VisitorCTDwe(
+	public function groupTTweD() {
+                $visitorTTweD = new VisitorTTweD(
                         $this->totalGraph,
-                        $this->groupsWithNoInnerNodes); 
-                $this->traversal->visitNodes($visitorCTDwe);                 
-	}
-
-	public function groupDOnce( $nodeId ) {
-                if ( empty( $this->totalGraph->nodes[$nodeId]->attributes['treeKey'] )  ) {
-                    echo "Group by D is only possible when the treeKey attribute is set." . PHP_EOL;
-                    exit(); 
-                }
-                $visitorDOnce = new VisitorDOnce(
-                        $this->totalGraph,
-                        $this->groupsWithNoInnerNodes); 
-                $this->traversal->visitNodes($visitorDOnce, $nodeId);                 
-	}
+                        $this->groupsWithNoInnerNodes);
+                $this->traversal->visitNodes($visitorTTweD);                 
+	}        
         
         public function setTreeKey () {
                 $visitorTreeKey = new VisitorTreeKey($this->totalGraph); 
@@ -329,17 +318,17 @@ class Profiler {
                 $this->traversal->visitNodes($visitorOptimizedForest); 
         }
 
+        public function optimizedForestWe () {
+                $visitorOptimizedForestWe = new VisitorOptimizedForestWe($this->totalGraph); 
+                $this->traversal->visitNodes($visitorOptimizedForestWe); 
+        }
+
         public function createDefaultActiveGraph () {
                 // To be called once we have the totalGraph, after the groups have been created. 
                 $visitorDefaultActiveGraph = new VisitorDefaultActiveGraph(
                         $this->totalGraph, 
                         $this->activeGraph);
                 $this->traversal->visitNodes($visitorDefaultActiveGraph);
-        }
-        
-        public function findMaxSaved() {
-                $visitorFindMaxSaved = new VisitorFindMaxSaved($this->traversal, $this->totalGraph);
-                $this->traversal->visitNodes($visitorFindMaxSaved); 
         }
         
 	public function activateGroup($groupId, $permanent) {
@@ -386,7 +375,7 @@ class Profiler {
 		}
 	}
 
-	public function deactivateNode($nodeId, bool $permanent) {
+	public function deactivateNode($nodeId) {
 
 		if (isset($this->totalGraph->arrowsIn[$nodeId])) {
 			foreach ($this->totalGraph->arrowsIn[$nodeId] as $sourceId => $arrow) {

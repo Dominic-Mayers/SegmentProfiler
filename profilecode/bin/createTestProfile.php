@@ -1,8 +1,9 @@
+#!/usr/bin/env php
 <?php 
 /*
  * It is a recursion on $topTreeSize and $level. For a tree, $topTreeSize is the
- * number of nodes in the tree less the total size of the forest subtrees. Fpr a
- * forest, $level is the number of times generateFprest must call itself to get
+ * number of nodes in the tree less the total size of the forest subtrees. For a
+ * forest, $level is the number of times generateForest must call itself to get
  * that forest. The empty forest has level 0. When generateForest calls itself 
  * to generate a subforest, $level reduces. In the base case, $level = 0, it
  * retuns the empty forest [] without recursively calling itself to generate a
@@ -108,5 +109,5 @@ function createProfile($node) {
 }
 
 $labels = ['A', 'B', 'C'];
-$node = createRootNode($labels, 10,  [1,3], 2, 2); 
+$node = createRootNode($labels, 3,  [2,3], 2, 2); 
 createProfile($node); 

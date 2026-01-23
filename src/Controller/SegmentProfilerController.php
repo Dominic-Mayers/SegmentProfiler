@@ -44,8 +44,9 @@ class SegmentProfilerController extends AbstractController {
 				$profiler->deactivateGroup($groupId);
 			}
 		}
-		$profiler->setColorCode(); 
-                $profiler->createGraphViz($input, $profiler->getSubGraph($startId), false, $toUngroup);
+		$profiler->setColorCode();
+                $subGraph = $profiler->getSubGraph($startId); 
+                $profiler->createGraphViz($input, $subGraph, false, $toUngroup);
                 //$script  = $this->gv->createScript($profiler->graph);
 		$svgHtml = $this->gv->createImageData($profiler->graph);
                 //$svgHtml = ""; 
@@ -73,15 +74,14 @@ class SegmentProfilerController extends AbstractController {
                 }
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
-                //$profiler->groupCTwe();
+                $profiler->groupCTwe();
                 $profiler->createDefaultActiveGraph();
-                $profiler->optimizedForest(); 
+                $profiler->optimizedForestWe();
+                $profiler->groupTTweD();
+                $profiler->createDefaultActiveGraph();
+                //$profiler->groupT();
                 //$profiler->groupTwe();
-                //$profiler->createDefaultActiveGraph();
                 //$profiler->groupCT();
-                //$profiler->createDefaultActiveGraph();
-                //$profiler->createDefaultActiveGraph();
-                //$profiler->groupCTDwe();
                 
 
                 $profiler->saveGraphInFile($filenameTotal, false); 

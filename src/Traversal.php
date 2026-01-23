@@ -12,6 +12,7 @@ class Traversal {
         }
         
 	public function visitNodes(AbstractVisitor $visitor, $rootId = null) {
+                $visitor->exitIfUsed(); 
 		method_exists($visitor, "init") && $visitor->init();
                 $rootId ??= $this->totalGraph->rootId; 
 		$toProcess = [$rootId];

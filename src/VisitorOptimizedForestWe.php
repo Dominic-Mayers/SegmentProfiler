@@ -2,7 +2,7 @@
 
 namespace App;
 
-class VisitorOptimizedForest extends AbstractVisitor {
+class VisitorOptimizedForestWe extends AbstractVisitor {
 
         private $heights ; 
         private $groups;
@@ -45,8 +45,8 @@ class VisitorOptimizedForest extends AbstractVisitor {
             $removable = 0;
             $topKey = []; 
             foreach( $top as $nodeId ) {
-                $this->totalGraph->nodes[$nodeId]->attributes['TK'] = 'Y'; 
-                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey'];
+                $this->totalGraph->nodes[$nodeId]->attributes['TKwe'] = 'Y'; 
+                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKeyWithEmpty'];
                 $topKey[$key][] = $nodeId; 
                 $treeSize = $this->Size[$key]; 
                 $removable += $treeSize;
@@ -54,11 +54,11 @@ class VisitorOptimizedForest extends AbstractVisitor {
             /*
             $topGroups = []; 
             foreach ($top as $nodeId) {
-                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey']; 
+                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKeyWithEmpty']; 
                 $topGroups[$key][] = $nodeId;  
             }
             foreach ($top as $nodeId) {
-                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey']; 
+                $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKeyWithEmpty']; 
                 $topGroupSize = \count($topGroups[$key]);
                 $treeSize = $this->Size[$key]; 
                 echo "$nodeId is a top tree with key $key of tree size $treeSize and top group size $topGroupSize.". PHP_EOL;
@@ -71,13 +71,13 @@ class VisitorOptimizedForest extends AbstractVisitor {
 
         private function setGroupsAndSize ($level) {
                 foreach($level as $nodeId) {
-                    $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey'];
+                    $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKeyWithEmpty'];
                     $this->groups[$key][] = $nodeId;   
                     if (isset($this->Size[$key])) {continue;}
                     $adj = $this->getChildrenArrowsOut($nodeId);
                     $this->Size[$key] = 1;
                     foreach ($adj as $childId => $unused) {
-                            $childKey = $this->totalGraph->nodes[$childId]->attributes['treeKey'];
+                            $childKey = $this->totalGraph->nodes[$childId]->attributes['treeKeyWithEmpty'];
                             $this->Size[$key] += $this->Size[$childKey];
                     }
                 }
@@ -85,7 +85,7 @@ class VisitorOptimizedForest extends AbstractVisitor {
         
         private function setForest($level) {
                 foreach($level as $nodeId) {
-                    $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKey'];
+                    $key = $this->totalGraph->nodes[$nodeId]->attributes['treeKeyWithEmpty'];
                     //echo "Placing $nodeId with key $key". PHP_EOL; 
                     if (isset($this->forest[$key]) && is_array($this->forest[$key])) {
                         //echo "Key $key already in forest" . PHP_EOL;
@@ -100,7 +100,7 @@ class VisitorOptimizedForest extends AbstractVisitor {
                     $this->forestArrows[$nodeId] = []; 
                     $adj = $this->getChildrenArrowsOut($nodeId);
                     foreach ($adj as $childId => $unused) {
-                        $childKey = $this->totalGraph->nodes[$childId]->attributes['treeKey'];
+                        $childKey = $this->totalGraph->nodes[$childId]->attributes['treeKeyWithEmpty'];
                         if (!empty($this->forest[$childKey])) {
                             $this->forestArrows[$nodeId][] = $childId; 
                         } elseif (!empty($this->forestArrows[$childId])) {

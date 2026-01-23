@@ -8,12 +8,22 @@ use App\TotalGraph;
 abstract class AbstractVisitor  {
     
         private $childrenArrowsOut = [];
-        private $stackedMultipleIncoming = []; 
+        private $stackedMultipleIncoming = [];
+        private $used; 
         
         public function __construct (protected  TotalGraph $totalGraph, 
                                      private $groupsWithNoInnerNodes = null) {
                 $this->totalGraph = $totalGraph;
-                $this->groupsWithNoInnerNodes = $groupsWithNoInnerNodes; 
+                $this->groupsWithNoInnerNodes = $groupsWithNoInnerNodes;
+                $this->used = false; 
+        }
+        
+        public function exitIfUsed() {
+            if ($this->used === true) {
+                echo "Error: Visitors are helper objects to be used once per traversal." . PHP_EOL;
+                exit(); 
+            }
+            $this->used = true; 
         }
         
         public function beforeChildrenProcess($currentId) {
