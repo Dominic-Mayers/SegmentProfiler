@@ -1,22 +1,22 @@
 #!/usr/bin/env php
 <?php 
 /*
- * It is a recursion on $topTreeSize and $level. For a tree, $topTreeSize is the
- * number of nodes in the tree less the total size of the forest subtrees. For a
- * forest, $level is the number of times generateForest must call itself to get
- * that forest. The empty forest has level 0. When generateForest calls itself 
- * to generate a subforest, $level reduces. In the base case, $level = 0, it
- * retuns the empty forest [] without recursively calling itself to generate a
- * subforest. GenerateForest is never called thereafter. When it calls 
- * createRootOverSubforest, it passes the subforest (and $topTreeSize, etc), not
- * the level. The forest is constant when it calls itself, but the value of
- * $topTreeSize reduces, because it gets split among $nbChildren and the root. 
- * The base case is 0. When $topTreeSize is 0 and the forest is not empty, it
- * picks a tree at random in the forest with no need to compute any children or
- * to create any new node. The case where topTreeSize is 0 and the forest is
- * empty requires the notion of a null tree.   
- * .
- * In  GenerateForest 
+ * It is a recursion on $topTreeSize and $level. For a tree, $topTreeSize
+ * is the number of nodes in the tree less the total size of the forest
+ * subtrees without counting their root. For a forest, $level is the
+ * number of times generateForest must call itself to get that forest.
+ * When generateForest calls itself to generate a subforest, $level reduces
+ * by one. In the base case, $level = 0, it retuns the empty forest [].
+ * When it calls createRootOverSubforest, it passes the subforest (and
+ * $topTreeSize, etc), not the level. The forest is constant when it calls
+ * itself, but the value of $topTreeSize reduces, because it gets split
+ * among $nbChildren and the root. The base case is 0 or 1. When
+ * $topTreeSize is 0 it returns the empty tree. Using only 0 as base
+ * case would terminate, because we remove 1 before splitting among children,
+ * but the forest would never be used. Therefore, when it is 1 and the forest
+ * is not empty, it picks a tree at random in the forest. When it is 1,
+ * and the forest is empty it returns a leaf, but the same would happen
+ * if we were to make a recursive call.   
  */
 function createRootNode($labels, $topTreeSize,  $child_range, $forestLevel, $forestSizePerLevel) {
     $subforest = generateForest ($labels, $topTreeSize,  $child_range, $forestLevel, $forestSizePerLevel);
@@ -40,13 +40,19 @@ function createRootOverSubforest($labels, $topTreeSize, $child_range, $subforest
         fwrite(STDERR, "Error: At the least one label is needed." . PHP_EOL);
         exit();
     }
-    if ($topTreeSize === 0 && !empty($subforest)) {
+    if ($topTreeSize === 0 ) {
+        return null;         
+    }
+    if ($topTreeSize === 1 && !empty($subforest)) {
         $k = mt_rand(0, \count($subforest) -1);
         $node = $subforest[$k];
         return $node; 
     }
-    if ($topTreeSize === 0 && empty($subforest)) {
-        return null;         
+    if ($topTreeSize === 1 && empty($subforest)) {
+        // This is not really needed. The same would happen without it. 
+        $node['label'] = $labels[mt_rand(0, \count($labels)-1)];
+        $node['children'] = [];
+        return $node; 
     }
     $node['label'] = $labels[mt_rand(0, \count($labels)-1)];
     $node['children'] = [];
@@ -109,5 +115,5 @@ function createProfile($node) {
 }
 
 $labels = ['A', 'B', 'C'];
-$node = createRootNode($labels, 3,  [2,3], 2, 2); 
+$node = createRootNode($labels, 10,  [2,4], 3, 2); 
 createProfile($node); 

@@ -1,8 +1,6 @@
 <?php
 namespace App;
-
-use Graphp\GraphViz\GraphViz; 
-use Graphp\Graph\Graph;
+use Graphp\Graph\Graph; 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use App\TotalGraph; 
 use App\ActiveGraph; 
@@ -36,7 +34,6 @@ class Profiler {
 
         
 	public Graph $graph;
-	public GraphViz $graphviz;
 	
 	public function __construct(
                 private TotalGraph $totalGraph,
@@ -45,24 +42,28 @@ class Profiler {
 		private UrlGeneratorInterface $urlGenerator,
                 private $groupsWithNoInnerNodes = null,
 	) {
-		$this->graphviz    = new GraphViz();
 	}
 	
         public function setColorCode( $nodes = null ) {
 		// To be executed on the active graph or active subgraph. 
 		
 		$cM = $this->cM;
+		$nC = count( $cM );
 		$V  = $nodes ?? $this->activeGraph->nodes; 
-
 		$totalTime = 0;
 		foreach ( $V as  $nodeId => $node ) {
 			$timeExc = $node->attributes['timeExclusive'];
 			$sortedTimes[] = $timeExc;
 			$totalTime += $timeExc;
 		}
+                if($totalTime === 0) {
+                    foreach ( $V as $nodeId => $node )  {
+                            $node->attributes['colorCode'] = (int) $nC / 2; 
+                    }
+                    return; 
+                }
 		sort( $sortedTimes );
 
-		$nC = count( $cM );
 		$partialTime = 0;
 		$fracTime = $totalTime / $nC;
 		// It might not seem, but this runs over all the nodes $i,
@@ -192,6 +193,34 @@ class Profiler {
 		return [$subNodes, $subArrows, $startId];
 	}
 
+        public function activeGraphToDot($input = 'input', $graphArr = null , $recolor=false, $toUngroup =  '') {
+		$cM = $this->cM; 
+		$this->graph = new Graph();
+		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId];
+		if ($recolor) {
+			$this->setColorCode($V);
+		}  
+                $dot = "digraph {" . PHP_EOL;
+                foreach ($V as $nodeId => $node) {
+                    $cC = $node->attributes['colorCode'];
+                    $dot .= "\"$nodeId\" [id=\"$nodeId\" label=\"{$this->getVizLabel($nodeId)}\" ". 
+                            "style=\"filled\" fontname=\"Courier-Bold\" shape=\"rect\" ".
+                            "URL=\"https://segmentprofiler.org/drawgraph/$input/$nodeId\" target=\"_parent\" ".
+                            "colorscheme=\"oranges9\" fillcolor={$cM[$cC]['fl']} fontcolor=\"black\"]". \PHP_EOL;
+                }
+                foreach ($A as $adj) {
+			foreach ($adj as $arrow) {
+                             $dot .= "\"{$arrow->sourceId}\" -> \"{$arrow->targetId}\"";
+                             if (isset($arrow->calls) && $arrow->calls !== 1) {
+                                $dot .= " [label={$arrow->calls}]"; 
+                             }
+                             $dot .= PHP_EOL; 
+                        }
+                }
+                $dot .= "}" . PHP_EOL;  
+                return $dot; 
+        }
+        
 	public function createGraphViz($input = 'input', $graphArr = null , $recolor=false, $toUngroup =  '') {
 		$cM = $this->cM; 
 		$this->graph = new Graph();
@@ -199,59 +228,35 @@ class Profiler {
 		if ($recolor) {
 			$this->setColorCode($V);
 		}
-		if (empty($A)) { return "";}
 		$gvNodes = [];
-		foreach ($A as $adj) {
+                foreach ($V as $nodeId => $node) {
+			$gvnode = $gvNodes[$nodeId] = $this->graph->createVertex();
+			$gvnode->setAttribute('id', $nodeId );
+			$gvnode->setAttribute('graphviz.label', $this->getVizLabel($nodeId)); 
+			$gvnode->setAttribute('graphviz.style', 'filled');
+			$gvnode->setAttribute('graphviz.fontname', "Courier-Bold"); 
+			$gvnode->setAttribute('graphviz.shape', "rect");
+			$gvnode->setAttribute('colorscheme', 'orange9');
+                        if ( ! empty($A[$nodeId])) {
+                                $url = $this->urlGenerator->generate(
+                                        'drawgraph', 
+                                        ['toUngroup' => $toUngroup, 'startId' => $nodeId, 'input' => $input ],
+                                        UrlGeneratorInterface::ABSOLUTE_URL
+                                );
+                                $gvnode->setAttribute('graphviz.URL', $url );
+                                $gvnode->setAttribute('graphviz.target', '_parent');
+                        }
+			if (isset ($node->attributes['colorCode']) ) {
+				$cC = $node-é>attributes['colorCode'];
+				$gvnode->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);
+				$gvnode->setAttribute('graphviz.fillcolor'  , $cM[$cC]['fl']);
+				$gvnode->setAttribute('graphviz.fontcolor'  , $cM[$cC]['ft']);
+			}                    
+                }
+                foreach ($A as $adj) {
 			foreach ($adj as $arrow) {
-				if (! isset($gvNodes[$arrow->sourceId]) ) {
-					$source = $gvNodes[$arrow->sourceId] = $this->graph->createVertex();
-					$source->setAttribute('id', $arrow->sourceId );
-					$source->setAttribute('graphviz.label', $this->getVizLabel($arrow->sourceId)); 
-					$source->setAttribute('graphviz.style', 'filled');
-					$source->setAttribute('graphviz.fontname', "Courier-Bold"); 
-					$source->setAttribute('graphviz.shape', "rect");
-					$source->setAttribute('colorscheme', 'orange9');
-					$url = $this->urlGenerator->generate(
-						'drawgraph', 
-						['toUngroup' => $toUngroup, 'startId' => $arrow->sourceId, 'input' => $input ],
-						UrlGeneratorInterface::ABSOLUTE_URL
-					);
-					$source->setAttribute('graphviz.URL', $url );
-					$source->setAttribute('graphviz.target', '_parent'); 
-					if (isset ($V[$arrow->sourceId]->attributes['colorCode']) ) {
-						$cC = $V[$arrow->sourceId]->attributes['colorCode'];
-						$source->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);
-						$source->setAttribute('graphviz.fillcolor'  , $cM[$cC]['fl']);
-						$source->setAttribute('graphviz.fontcolor'  , $cM[$cC]['ft']);
-					}
-				} else {
-					$source = $gvNodes[$arrow->sourceId];
-				}
-				if (! isset($gvNodes[$arrow->targetId]) ) {
-					$target = $gvNodes[$arrow->targetId] = $this->graph->createVertex();					
-					$target->setAttribute('id', $arrow->targetId );
-					$target->setAttribute('graphviz.label', $this->getVizLabel($arrow->targetId)); 
-					$target->setAttribute('graphviz.style', 'filled');
-					$target->setAttribute('graphviz.fontname', "Courier-Bold"); 
-					$target->setAttribute('graphviz.shape', "rect"); 
-					if ( ! empty($A[$arrow->targetId])) {
-						$url = $this->urlGenerator->generate(
-							'drawgraph',
-							['toUngroup' => $toUngroup, 'startId' => $arrow->targetId, 'input' => $input ], 
-							UrlGeneratorInterface::ABSOLUTE_URL
-						);
-						$target->setAttribute('graphviz.URL', $url);
-						$target->setAttribute('graphviz.target', '_parent');
-					} 
-					if (isset ($V[$arrow->targetId]->attributes['colorCode']) ) {
-						$cC = $V[$arrow->targetId]->attributes['colorCode'];
-						$target->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);	
-						$target->setAttribute('graphviz.fillcolor'  , $cM[$cC]['fl']);
-						$target->setAttribute('graphviz.fontcolor'  , $cM[$cC]['ft']);
-					}
-				} else {
-					$target = $gvNodes[$arrow->targetId];
-				}
+                                $source = $gvNodes[$arrow->sourceId];
+                                $target = $gvNodes[$arrow->targetId];
 				$edge = $this->graph->createEdgeDirected($source, $target);
 				if (isset($arrow->calls) && $arrow->calls !== 1) {	
 					$edge->setAttribute('graphviz.label', $arrow->calls); 

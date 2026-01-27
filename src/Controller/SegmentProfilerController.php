@@ -46,15 +46,37 @@ class SegmentProfilerController extends AbstractController {
 		}
 		$profiler->setColorCode();
                 $subGraph = $profiler->getSubGraph($startId); 
-                $profiler->createGraphViz($input, $subGraph, false, $toUngroup);
-                //$script  = $this->gv->createScript($profiler->graph);
-		$svgHtml = $this->gv->createImageData($profiler->graph);
-                //$svgHtml = ""; 
-                $url = "/js/dropdown.js"; //$this->packages->getUrl('js/dropdown.js');
+                $dotString = $profiler->activeGraphToDot($input, $subGraph, false, $toUngroup); 
+                $svg = $this->dot2svg($dotString); 
+                $urlDropdown = "/js/dropdown.js";
+                $urlStep = "/js/step.js";
 		return new Response(
-                    '<!DOCTYPE html><html><head><script src='.$url.' defer ></script></head><body>'.$svgHtml.'</body></html>'
+                    '<!DOCTYPE html><html><head>'.
+                        '<script src='.$urlDropdown.' defer ></script>'.
+                        '<script src='.$urlStep.' defer ></script>' .
+                    '</head><body><button type=button id=stepButton>Step in</button>'.$svg.'</body></html>'
                 );
 	}
+
+        private function dot2svg ($dotString) {
+            $executable = "/usr/bin/dot -Tsvg"; 
+            $descriptorspec = array(
+                0 => array("pipe", "r"),
+                1 => array("pipe", "w"),
+                2 => array("pipe", "w")
+            );
+            $process = proc_open(
+                $executable,
+                $descriptorspec,
+                $pipes
+            );
+            fwrite($pipes[0], $dotString);
+            fclose($pipes[0]);
+            $svg = stream_get_contents($pipes[1]); 
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            return $svg; 
+        }
 
 	private function setTree (Profiler $profiler, $input) {
 		$this->notesFile = new \SplFileObject('../src/Fixtures/'.$input.'.profile');
@@ -74,6 +96,7 @@ class SegmentProfilerController extends AbstractController {
                 }
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($profiler, $input);
+                $profiler->createDefaultActiveGraph();
                 $profiler->groupCTwe();
                 $profiler->createDefaultActiveGraph();
                 $profiler->optimizedForestWe();
