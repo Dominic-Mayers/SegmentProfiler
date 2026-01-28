@@ -28,8 +28,8 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         }
         
         public function beforeChildrenDefinition($currentId) {
-            //if ($this->totalGraph->nodes[$currentId]->attributes['maxSaved']) {
-            //    $saved = $this->totalGraph->nodes[$currentId]->attributes['saved']; 
+            //if ($this->totalGraph->nodes[$currentId]['attributes']['maxSaved']) {
+            //    $saved = $this->totalGraph->nodes[$currentId]['attributes']['saved']; 
             //    echo $currentId . " is a maxSaved of " . $saved . PHP_EOL;
             //    $this->totalGraph->totalSaved += $saved; 
             //}
@@ -47,6 +47,6 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         }
         
         public function finalize() {
-            echo "The size of active graph is " . \count($this->activeGraph->nodes) . ".". PHP_EOL; 
+            echo "The size of active graph is " . \count($this->activeGraph->nodes) . ".<br>". PHP_EOL; 
         }
 }

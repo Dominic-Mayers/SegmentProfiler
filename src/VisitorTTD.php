@@ -14,7 +14,7 @@ class VisitorTTD extends AbstractVisitorT {
         }
         
 	public function beforeChildrenDefinition($currentId) {
-                if (!empty($this->totalGraph->nodes[$currentId]->attributes['TK']) && $this->currentGroupKey === null) {
+                if (!empty($this->totalGraph->nodes[$currentId]['attributes']['TK']) && $this->currentGroupKey === null) {
                         $this->currentGroupKey = $currentId; 
                         $this->groups[$this->currentGroupKey] = [];
                 }
@@ -32,7 +32,7 @@ class VisitorTTD extends AbstractVisitorT {
 	public function finalize () {
             foreach( $this->groups as $group) {
                 if (count($group) > 1 ) {
-                    $treeKey = $this->totalGraph->nodes[$group[0]]->attributes['treeKey'];
+                    $treeKey = $this->totalGraph->nodes[$group[0]]['attributes']['treeKey'];
                     $treeLabel = $this->totalGraph->treeLabels['treeKey'][$treeKey];
                     $innerLabel = explode('.', $treeLabel)[0]; 
                     $groupRep = $this->totalGraph->nodes[$group[0]]; 
