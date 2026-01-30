@@ -22,7 +22,7 @@ class SegmentProfilerController extends AbstractController {
 		}
                 $ui->setColorCode();
                 $subGraph = $ui->getSubGraph($startId); 
-                $dotString = $ui->activeGraphToDot($input, $subGraph, $toUngroup); 
+                $dotString = $ui->activeGraphToDot($input, $subGraph); 
                 $svg = $ui->dot2svg($dotString); 
                 $urlDropdown = "/js/dropdown.js";
                 $urlStep = "/js/step.js";

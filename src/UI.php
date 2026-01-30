@@ -156,7 +156,10 @@ class UI {
             return $svg; 
         }
 
-        public function activeGraphToDot($input = 'input', $graphArr = null , $toUngroup =  '') {
+        public function activeGraphToDot($input = 'input', $graphArr = null) {
+                // We had a parameter $toUngroup, but it was used to pass the state of the graph in the URLs.
+                // We must maintain the state of the graph differently. 
+                // This also applies to $input. It is stored in the URLs to pass the state.
 		$cM = $this->cM; 
 		$this->graph = new Graph();
 		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId];
@@ -171,9 +174,7 @@ class UI {
                 foreach ($A as $adj) {
 			foreach ($adj as $arrow) {
                              $dot .= "\"{$arrow['sourceId']}\" -> \"{$arrow['targetId']}\"";
-                             if (isset($arrow['calls']) && $arrow['calls'] !== 1) {
-                                $dot .= " [label={$arrow['calls']}]"; 
-                             }
+                             if (isset($arrow['calls']) && $arrow['calls'] !== 1) {$dot .= " [label={$arrow['calls']}]";}
                              $dot .= PHP_EOL; 
                         }
                 }
