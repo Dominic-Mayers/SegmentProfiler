@@ -29,13 +29,10 @@ class UI {
                 private ActiveGraph $activeGraph, 
                 private Traversal $traversal,
 		private UrlGeneratorInterface $urlGenerator,
-                private $groupsWithNoInnerNodes = null,
 	) {
 	}
 	
-        public function setColorCode() {
-		// To be executed on the active graph or active subgraph. 
-		
+        public function setColorCode() {		
 		$cM = $this->cM;
 		$nC = count( $cM );
 		$V  = & $this->activeGraph->nodes; 
@@ -159,13 +156,10 @@ class UI {
             return $svg; 
         }
 
-        public function activeGraphToDot($input = 'input', $graphArr = null , $recolor=false, $toUngroup =  '') {
+        public function activeGraphToDot($input = 'input', $graphArr = null , $toUngroup =  '') {
 		$cM = $this->cM; 
 		$this->graph = new Graph();
 		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId];
-		if ($recolor) {
-			$this->setColorCode($V);
-		}  
                 $dot = "digraph {" . PHP_EOL;
                 foreach ($V as $nodeId => $node) {
                     $cC = $node['attributes']['colorCode'];
@@ -243,6 +237,7 @@ class UI {
                 if ($permanent) {
                     $this->totalGraph->nodes[$groupId]['innerNodesId'] = [];
                 }
+                $this->setColorCode(); 
 	}
 
 	public function deactivateGroup($groupId) {

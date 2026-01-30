@@ -2,11 +2,8 @@
 
 namespace App\Controller;
 
-use App\GraphTransformation;
 use App\Backend;
 use App\UI;
-use App\TotalGraph;
-use Graphp\GraphViz\GraphViz; 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,7 +22,7 @@ class SegmentProfilerController extends AbstractController {
 		}
                 $ui->setColorCode();
                 $subGraph = $ui->getSubGraph($startId); 
-                $dotString = $ui->activeGraphToDot($input, $subGraph, false, $toUngroup); 
+                $dotString = $ui->activeGraphToDot($input, $subGraph, $toUngroup); 
                 $svg = $ui->dot2svg($dotString); 
                 $urlDropdown = "/js/dropdown.js";
                 $urlStep = "/js/step.js";

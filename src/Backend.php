@@ -3,7 +3,6 @@ namespace App;
 use App\GraphTransformation;
 use App\TotalGraph; 
 use App\ActiveGraph;
-use App\VisitorDefaultActiveGraph; 
 
 class Backend {
 	
