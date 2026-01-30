@@ -181,50 +181,6 @@ class UI {
                 return $dot; 
         }
         
-	public function createGraphViz($input = 'input', $graphArr = null , $recolor=false, $toUngroup =  '') {
-		$cM = $this->cM; 
-		$this->graph = new Graph();
-		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId];
-		if ($recolor) {
-			$this->setColorCode($V);
-		}
-		$gvNodes = [];
-                foreach ($V as $nodeId => $node) {
-			$gvnode = $gvNodes[$nodeId] = $this->graph->createVertex();
-			$gvnode->setAttribute('id', $nodeId );
-			$gvnode->setAttribute('graphviz.label', $this->getVizLabel($nodeId)); 
-			$gvnode->setAttribute('graphviz.style', 'filled');
-			$gvnode->setAttribute('graphviz.fontname', "Courier-Bold"); 
-			$gvnode->setAttribute('graphviz.shape', "rect");
-			$gvnode->setAttribute('colorscheme', 'orange9');
-                        if ( ! empty($A[$nodeId])) {
-                                $url = $this->urlGenerator->generate(
-                                        'drawgraph', 
-                                        ['toUngroup' => $toUngroup, 'startId' => $nodeId, 'input' => $input ],
-                                        UrlGeneratorInterface::ABSOLUTE_URL
-                                );
-                                $gvnode->setAttribute('graphviz.URL', $url );
-                                $gvnode->setAttribute('graphviz.target', '_parent');
-                        }
-			if (isset ($node['attributes']['colorCode']) ) {
-				$cC = $node['attributes']['colorCode'];
-				$gvnode->setAttribute('graphviz.colorscheme', $cM[$cC]['sc']);
-				$gvnode->setAttribute('graphviz.fillcolor'  , $cM[$cC]['fl']);
-				$gvnode->setAttribute('graphviz.fontcolor'  , $cM[$cC]['ft']);
-			}                    
-                }
-                foreach ($A as $adj) {
-			foreach ($adj as $arrow) {
-                                $source = $gvNodes[$arrow['sourceId']];
-                                $target = $gvNodes[$arrow['targetId']];
-				$edge = $this->graph->createEdgeDirected($source, $target);
-				if (isset($arrow['calls']) && $arrow['calls'] !== 1) {	
-					$edge->setAttribute('graphviz.label', $arrow['calls']); 
-				}
-                        }
-		}
-	}
-        
 	public function activateGroup($groupId, $permanent) {
 
 		foreach ($this->totalGraph->nodes[$groupId]['innerNodesId'] as $nodeId) {
