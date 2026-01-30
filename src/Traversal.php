@@ -14,7 +14,8 @@ class Traversal {
 	public function visitNodes(AbstractVisitor $visitor, $rootId = null) {
                 $visitor->exitIfUsed(); 
 		method_exists($visitor, "init") && $visitor->init();
-                $rootId ??= $this->totalGraph->rootId; 
+                // Must manage the case where the root is in a group
+                $rootId ??= $this->findActiveContainingGroup($this->totalGraph->rootId);
 		$toProcess = [$rootId];
 		$visited = [];
 		while (true) {
@@ -36,4 +37,8 @@ class Traversal {
                 return $ret ?? null ;
 	}
         
+        private function findActiveContainingGroup($nodeId) {
+            while (($groupId = $this->totalGraph->nodes[$nodeId]['groupId'] ?? false) && null !== ($nodeId = $groupId));            
+            return isset($this->totalGraph->nodes[$nodeId]) ?  $nodeId: false; 
+        }
 }

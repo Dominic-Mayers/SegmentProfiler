@@ -69,8 +69,7 @@ abstract class AbstractVisitor  {
         	$innerLabelGroups = [];
 		$adj = $this->totalGraph->adjActiveArrowsOut($currentId);
 		foreach ($adj as $targetId => $arrow) {
-                        $adjIn = $this->totalGraph->adjActiveArrowsIn($targetId);
-                        if (count($adjIn) > 1) {continue;}
+                        if ($targetId === $currentId) {continue;}
                         $groupKey = $groupKeyCallback($targetId); 
 			$innerLabelGroups[$groupKey][] = $targetId;
 		}

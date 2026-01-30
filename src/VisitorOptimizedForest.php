@@ -45,7 +45,7 @@ class VisitorOptimizedForest extends AbstractVisitor {
             $removable = 0;
             $topKey = []; 
             foreach( $top as $nodeId ) {
-                $this->totalGraph->nodes[$nodeId]['attributes']['TK'] = 'Y'; 
+                $this->totalGraph->nodes[$nodeId]['attributes']['TT'] = 'Y'; 
                 $key = $this->totalGraph->nodes[$nodeId]['attributes']['treeKey'];
                 $topKey[$key][] = $nodeId; 
                 $treeSize = $this->Size[$key]; 

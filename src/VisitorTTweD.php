@@ -14,7 +14,7 @@ class VisitorTTweD extends AbstractVisitorT {
         }
         
 	public function beforeChildrenDefinition($currentId) {
-                if (!empty($this->totalGraph->nodes[$currentId]['attributes']['TKwe']) && $this->currentGroupKey === null) {
+                if (!empty($this->totalGraph->nodes[$currentId]['attributes']['TTwe']) && $this->currentGroupKey === null) {
                         $this->currentGroupKey = $currentId; 
                         $this->groups[$this->currentGroupKey] = [];
                 }

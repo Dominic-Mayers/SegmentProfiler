@@ -115,5 +115,5 @@ function createProfile($node) {
 }
 
 $labels = ['A', 'B', 'C'];
-$node = createRootNode($labels, 10,  [2,4], 3, 2); 
+$node = createRootNode($labels, 6,  [2,4], 3, 2); 
 createProfile($node); 

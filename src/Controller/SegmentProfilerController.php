@@ -2,7 +2,8 @@
 
 namespace App\Controller;
 
-use App\Profiler;
+use App\GraphTransformation;
+use App\Backend;
 use App\UI;
 use App\TotalGraph;
 use Graphp\GraphViz\GraphViz; 
@@ -11,25 +12,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class SegmentProfilerController extends AbstractController {
-	
-	private GraphViz $gv;
-	private \SplFileObject $notesFile;
-	
-	public function __construct(
-                private TotalGraph $totalGraph,
-        ) {
-                $this->gv = new GraphViz(); 
-                $this->gv->setFormat('svg');
-	}
-	
+		
 	#[Route('/drawgraph/{input}/{startId}/{toUngroup}', name: 'drawgraph' )]
-	public function drawGraph(Profiler $profiler, UI $ui, $input, $startId = null, $toUngroup = ""): Response {
+	public function drawGraph(Backend $backend, UI $ui, $input, $startId = null, $toUngroup = ""): Response {
                 set_time_limit(600); 
-		$profiler->setDefaultGroups ($profiler, $input);
+		$backend->setDefaultGroups ($input);
 		if ( !empty($toUngroup) ) {
 			$toUngroupArr = explode("_", substr($toUngroup, 0, -1));
 			foreach($toUngroupArr as $groupId) {
-				$profiler->deactivateGroup($groupId);
+				$this->graphTransformation->deactivateGroup($groupId);
 			}
 		}
                 $ui->setColorCode();
@@ -38,8 +29,7 @@ class SegmentProfilerController extends AbstractController {
                 $svg = $ui->dot2svg($dotString); 
                 $urlDropdown = "/js/dropdown.js";
                 $urlStep = "/js/step.js";
-		return new Response(
-                    '<!DOCTYPE html><html><head>'.
+		return new Response('<!DOCTYPE html><html><head>'.
                         '<script src='.$urlDropdown.' defer ></script>'.
                         '<script src='.$urlStep.' defer ></script>' .
                         '<script>var activeGraph ='. file_get_contents(__DIR__.'/../../input/Graphs/'.$input.'.actgraph') . '</script>' .
