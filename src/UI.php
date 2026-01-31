@@ -9,7 +9,7 @@ use App\Traversal;
 class UI {
 	
 	private $cM = [ 
-		[ 'sc' => null, 'fl' => "white"  , 'ft' => "black" ],
+//		[ 'sc' => null, 'fl' => "white"  , 'ft' => "black" ],
 		[ 'sc' => 'oranges9', 'fl' => '1', 'ft' => "black" ],
 		[ 'sc' => 'oranges9', 'fl' => '2', 'ft' => "black" ],
 		[ 'sc' => 'oranges9', 'fl' => '3', 'ft' => "black" ],
@@ -42,51 +42,56 @@ class UI {
 			$sortedTimes[] = $timeExc;
 			$totalTime += $timeExc;
 		}
+		sort( $sortedTimes );
                 if($totalTime === 0) {
                     foreach ( $V as $nodeId => $node )  {
                             $V[$nodeId]['attributes']['colorCode'] = (int) $nC / 2; 
                     }
                     return; 
                 }
-		sort( $sortedTimes );
-
 		$partialTime = 0;
-		$fracTime = $totalTime / $nC;
-		// It might not seem, but this runs over all the nodes $i,
-		// because for each $k many nodes $i are run over and the max
-		// value $nC for $k is only reached when $partialTime is
-		// actually $totalTime.
-		$k = 1;
+                // We adopt the covention that the first per{$nC}tile is the 0th
+                // and the last is the $nC - 1 th.   
+		$pernCtile = 0; 
+                $smallestExcTime[$pernCtile] = $sortedTimes[0]; // Needed to init the loop.
 		$i = 0; 
-		while ( $k <= $nC ) {
-			$currentTime = $sortedTimes[$i];
+		while ( $i < \count($sortedTimes)) {
+                        // The goal is to associate every per{$nC}tile to the
+                        // smallest exclusive time in that per{$nC}tile.   
+                        $currentTime = $sortedTimes[$i];
 			$partialTime += $currentTime;
-			$oldN = $k;
-			$newN = ($partialTime + 1) / $fracTime;
-			while ( $k <= $newN ) {
-				$colorTimeLimits[$k - 1] = $currentTime;
-				$k++;
-			}
+			$oldPernCtile = $pernCtile;
+			$pernCtile = (int) ceil(($nC * $partialTime)/ $totalTime) - 1; // Use ceil - 1, because a pernCtile includes its max. 
+                        if ( $pernCtile > $oldPernCtile ) {
+                            $smallestExcTime[$pernCtile] = $currentTime; 
+                            //echo "Setting the smallest of the {$pernCtile}th per{$nC}tile to $currentTime.<br>". PHP_EOL; 
+                            for ($k = $oldPernCtile + 1; $k < $pernCtile; $k++ ) {
+                                // The smallest of $pernCtile was just set and
+                                // the smallest of $oldPernCtile was previously set.
+                                // Only the skipped pernCtile need to be set. 
+                                $smallestExcTime[$k] = $smallestExcTime[$oldPernCtile];
+                                //echo "Setting the smallest of skipped {$k}th per{$nC}tile to {$smallestExcTime[$oldPernCtile]}.<br>". PHP_EOL; 
+                            }
+                        }
 			$i++;
 		}
-		
-		// Integer: Darkness of colors when only a subrange of colors are used.
-		// 0          => lightest colors.
-		// $k - $oldN => darkest colors.
-		$adjust = intdiv($k - $oldN,2);
 
+                $smallestExcTime[$nC] = end($sortedTimes) + 1; // Needed for the $nC pernCtile, because we get the next pernCtile
 		foreach ( $V as $nodeId => $node )  {
 			$excTime = $node['attributes']['timeExclusive'];
 			$cC = -1;
-			for ( $i = 1; $i <= $nC; $i++ ) {
-				if ( $excTime <= $colorTimeLimits[$i] ) {
-					$cC = $i - 1 + $adjust;
+			for ( $pernCtile = 1; $pernCtile <= $nC; $pernCtile++ ) {
+				if ( $smallestExcTime[$pernCtile] > $excTime    ) {
+                                        // $excTime is in the previous $pernCtile, because this is the
+                                        // first that starts above it. 
+					$cC = $pernCtile - 1;
 					break;
 				}
 			}
 			if ( $cC === -1  )  {
-				trigger_error( "Color code require time under " . $colorTimeLimits[$nC] . 
-					", but time was " . $excTime . " for node " . $nodeId, E_USER_ERROR );
+				echo "Could not set color code of node " . $nodeId . 
+					" with exclusive time " . $excTime ;
+                                exit(); 
 			}
 
 			$V[$nodeId]['attributes']['colorCode'] = $cC;
@@ -170,7 +175,7 @@ class UI {
                     $dot .= "\"$nodeId\" [id=\"$nodeId\" label=\"{$this->getVizLabel($nodeId)}{$extra}\" ". 
                             "style=\"filled\" fontname=\"Courier-Bold\" shape=\"rect\" ".
                             "URL=\"https://segmentprofiler.org/drawgraph/$input/$nodeId\" target=\"_parent\" ".
-                            "colorscheme=\"oranges9\" fillcolor={$cM[$cC]['fl']} fontcolor=\"black\"]". \PHP_EOL;
+                            "colorscheme=\"oranges9\" fillcolor={$cM[$cC]['fl']} fontcolor=\"{$cM[$cC]['ft']}\"]". \PHP_EOL;
                 }
                 foreach ($A as $adj) {
 			foreach ($adj as $arrow) {

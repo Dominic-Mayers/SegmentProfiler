@@ -25,7 +25,7 @@ class Backend {
                 $this->setTree($input);
                 $this->graphTransformationAPI->createDefaultActiveGraph();
                 $this->graphTransformationAPI->contractionOnTwe();
-                //$this->graphTransformationAPI->groupCL();
+                $this->graphTransformationAPI->groupCL();
                 $this->graphTransformationAPI->createDefaultActiveGraph();
                 //$this->graphTransformationAPI->groupCTwe();
                 //$this->graphTransformationAPI->groupTTweD();                
