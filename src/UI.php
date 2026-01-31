@@ -166,7 +166,8 @@ class UI {
                 $dot = "digraph {" . PHP_EOL;
                 foreach ($V as $nodeId => $node) {
                     $cC = $node['attributes']['colorCode'];
-                    $dot .= "\"$nodeId\" [id=\"$nodeId\" label=\"{$this->getVizLabel($nodeId)}\" ". 
+                    $extra = $node['attributes']['extraLabel'] ?? ""; 
+                    $dot .= "\"$nodeId\" [id=\"$nodeId\" label=\"{$this->getVizLabel($nodeId)}{$extra}\" ". 
                             "style=\"filled\" fontname=\"Courier-Bold\" shape=\"rect\" ".
                             "URL=\"https://segmentprofiler.org/drawgraph/$input/$nodeId\" target=\"_parent\" ".
                             "colorscheme=\"oranges9\" fillcolor={$cM[$cC]['fl']} fontcolor=\"black\"]". \PHP_EOL;

@@ -14,7 +14,7 @@ use App\VisitorCTwe;
 use App\VisitorTreeKey;
 use App\VisitorTreeWithEmptyKey;
 
-class GraphTransformation {
+class GraphTransformationAPI {
 	
 	public function __construct(
                 private TotalGraph $totalGraph,
@@ -85,14 +85,14 @@ class GraphTransformation {
                 $this->traversal->visitNodes($visitorTreeWithEmptyKey); 
         }
 
-        public function optimizedForest () {
-                $visitorOptimizedForest = new VisitorOptimizedForest($this->totalGraph); 
-                $this->traversal->visitNodes($visitorOptimizedForest); 
+        public function contractionOnT () {
+                $visitorContractionOnT = new VisitorContractionOnT($this->totalGraph); 
+                $this->traversal->visitNodes($visitorContractionOnT); 
         }
 
-        public function optimizedForestWe () {
-                $visitorOptimizedForestWe = new VisitorOptimizedForestWe($this->totalGraph); 
-                $this->traversal->visitNodes($visitorOptimizedForestWe); 
+        public function contractionOnTwe () {
+                $visitorContractionOnTwe = new VisitorContractionOnTwe($this->totalGraph, 3 , 4); 
+                $this->traversal->visitNodes($visitorContractionOnTwe); 
         }
 
         public function createDefaultActiveGraph () {

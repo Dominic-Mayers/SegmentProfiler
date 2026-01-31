@@ -17,7 +17,7 @@ class SegmentProfilerController extends AbstractController {
 		if ( !empty($toUngroup) ) {
 			$toUngroupArr = explode("_", substr($toUngroup, 0, -1));
 			foreach($toUngroupArr as $groupId) {
-				$this->graphTransformation->deactivateGroup($groupId);
+				$this->graphTransformationAPI->deactivateGroup($groupId);
 			}
 		}
                 $ui->setColorCode();

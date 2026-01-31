@@ -1,13 +1,13 @@
 <?php
 namespace App;
-use App\GraphTransformation;
+use App\GraphTransformationAPI;
 use App\TotalGraph; 
 use App\ActiveGraph;
 
 class Backend {
 	
 	public function __construct(
-                private GraphTransformation $graphTransformation, 
+                private GraphTransformationAPI $graphTransformationAPI, 
                 private TotalGraph $totalGraph,
                 private ActiveGraph $activeGraph, 
 	) {
@@ -23,18 +23,12 @@ class Backend {
                 }
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($input);
-                $this->graphTransformation->createDefaultActiveGraph();
-                $this->graphTransformation->groupCTwe();
-                $this->graphTransformation->createDefaultActiveGraph();
-                $this->graphTransformation->optimizedForestWe();
-                $this->graphTransformation->groupTTweD();
-                $this->graphTransformation->createDefaultActiveGraph();
-                $this->graphTransformation->groupCL();
-                $this->graphTransformation->createDefaultActiveGraph();
-                //$this->graphTransformation->groupT();
-                //$this->graphTransformation->groupTwe();
-                //$this->graphTransformation->groupCT();
-                
+                $this->graphTransformationAPI->createDefaultActiveGraph();
+                $this->graphTransformationAPI->contractionOnTwe();
+                //$this->graphTransformationAPI->groupCL();
+                $this->graphTransformationAPI->createDefaultActiveGraph();
+                //$this->graphTransformationAPI->groupCTwe();
+                //$this->graphTransformationAPI->groupTTweD();                
                 $this->saveGraphInFile($filenameTotal, false); 
                 $this->saveGraphInFile($filenameActive, true);
         }
@@ -83,8 +77,8 @@ class Backend {
         private function setTree ($input) {
 		$this->notesFile = new \SplFileObject(__DIR__. '/Fixtures/'.$input.'.profile');
         	$this->totalGraph->getTree($this->notesFile);
-                $this->graphTransformation->setTreeKeyWithEmpty();
-                $this->graphTransformation->setTreeKey();
+                $this->graphTransformationAPI->setTreeKeyWithEmpty();
+                $this->graphTransformationAPI->setTreeKey();
                 //xdebug_break();
         }
 }
