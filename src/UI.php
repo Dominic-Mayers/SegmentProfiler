@@ -32,69 +32,27 @@ class UI {
 	) {
 	}
 	
-        public function setColorCode() {		
-		$cM = $this->cM;
-		$nC = count( $cM );
-		$V  = & $this->activeGraph->nodes; 
+        public function setColorCode() {
+                // The color code of each node is its  $nC quantile weighted per exclusive time.
+                // We take the convention that quantiles start at 0.
+		$cM = $this->cM; $nC = count( $cM ); $V  = & $this->activeGraph->nodes; 
 		$totalTime = 0;
 		foreach ( $V as  $nodeId => $node ) {
 			$timeExc = $node['attributes']['timeExclusive'];
-			$sortedTimes[] = $timeExc;
+			$sortedTimes[$nodeId] = $timeExc;
 			$totalTime += $timeExc;
 		}
-		sort( $sortedTimes );
                 if($totalTime === 0) {
-                    foreach ( $V as $nodeId => $node )  {
-                            $V[$nodeId]['attributes']['colorCode'] = (int) $nC / 2; 
-                    }
+                    // weighted quantiles make no sense when the weights are all zeros. 
+                    foreach ( $V as $nodeId => $node ) { $V[$nodeId]['attributes']['colorCode'] = (int) $nC / 2; }
                     return; 
                 }
-		$partialTime = 0;
-                // We adopt the covention that the first per{$nC}tile is the 0th
-                // and the last is the $nC - 1 th.   
-		$pernCtile = 0; 
-                $smallestExcTime[$pernCtile] = $sortedTimes[0]; // Needed to init the loop.
-		$i = 0; 
-		while ( $i < \count($sortedTimes)) {
-                        // The goal is to associate every per{$nC}tile to the
-                        // smallest exclusive time in that per{$nC}tile.   
-                        $currentTime = $sortedTimes[$i];
+                $partialTime = 0; 
+		asort( $sortedTimes );
+		foreach ( $sortedTimes as  $nodeId => $currentTime)  {
 			$partialTime += $currentTime;
-			$oldPernCtile = $pernCtile;
-			$pernCtile = (int) ceil(($nC * $partialTime)/ $totalTime) - 1; // Use ceil - 1, because a pernCtile includes its max. 
-                        if ( $pernCtile > $oldPernCtile ) {
-                            $smallestExcTime[$pernCtile] = $currentTime; 
-                            //echo "Setting the smallest of the {$pernCtile}th per{$nC}tile to $currentTime.<br>". PHP_EOL; 
-                            for ($k = $oldPernCtile + 1; $k < $pernCtile; $k++ ) {
-                                // The smallest of $pernCtile was just set and
-                                // the smallest of $oldPernCtile was previously set.
-                                // Only the skipped pernCtile need to be set. 
-                                $smallestExcTime[$k] = $smallestExcTime[$oldPernCtile];
-                                //echo "Setting the smallest of skipped {$k}th per{$nC}tile to {$smallestExcTime[$oldPernCtile]}.<br>". PHP_EOL; 
-                            }
-                        }
-			$i++;
-		}
-
-                $smallestExcTime[$nC] = end($sortedTimes) + 1; // Needed for the $nC pernCtile, because we get the next pernCtile
-		foreach ( $V as $nodeId => $node )  {
-			$excTime = $node['attributes']['timeExclusive'];
-			$cC = -1;
-			for ( $pernCtile = 1; $pernCtile <= $nC; $pernCtile++ ) {
-				if ( $smallestExcTime[$pernCtile] > $excTime    ) {
-                                        // $excTime is in the previous $pernCtile, because this is the
-                                        // first that starts above it. 
-					$cC = $pernCtile - 1;
-					break;
-				}
-			}
-			if ( $cC === -1  )  {
-				echo "Could not set color code of node " . $nodeId . 
-					" with exclusive time " . $excTime ;
-                                exit(); 
-			}
-
-			$V[$nodeId]['attributes']['colorCode'] = $cC;
+			$pernCtile = (int) ceil(($nC * $partialTime)/ $totalTime) - 1; // Use ceil - 1, because a pernCtile includes its max.
+                        $V[$nodeId]['attributes']['colorCode'] =  $pernCtile; 
 		}
 	}
         
