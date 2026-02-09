@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div id="graph-container"></div>
+
+<script type="application/json" id="graph-data">
+    {{ svg|json_encode|raw }}
+</script>
+{% endblock %}
+  
+{% block javascripts %}
+    {{ importmap('graph-app') }}
+{% endblock %}

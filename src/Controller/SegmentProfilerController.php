@@ -9,9 +9,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class SegmentProfilerController extends AbstractController {
+    
+        #[Route('/show/{input}/{startId}/{toUngroup}', name: 'show')]
+        public function show(Backend $backend, UI $ui, $input, $startId = null, $toUngroup = "") : Response {
+                $svg = $this->computeSvg ($backend, $ui, $input, $toUngroup, $startId);   
+                return $this->render('graph/show.html.twig', [
+                    'svg' => $svg,
+                ]);
+        }
 		
 	#[Route('/drawgraph/{input}/{startId}/{toUngroup}', name: 'drawgraph' )]
 	public function drawGraph(Backend $backend, UI $ui, $input, $startId = null, $toUngroup = ""): Response {
+                $svg = $this->computeSvg ($backend, $ui, $input, $toUngroup, $startId);             
+                $urlDropdown = "/js/dropdown.js";
+                $urlStep = "/js/step.js";
+		return new Response('<!DOCTYPE html><html><head>'.
+                    '<script src='.$urlDropdown.' defer ></script>'.
+                    '</head><body>'.$svg.'</body></html>'
+                );
+	}
+        
+        private function computeSvg (Backend $backend, UI $ui, $input, $toUngroup, $startId) {
                 set_time_limit(600); 
 		$backend->setDefaultGroups ($input);
 		if ( !empty($toUngroup) ) {
@@ -23,14 +41,7 @@ class SegmentProfilerController extends AbstractController {
                 $ui->setColorCode();
                 $subGraph = $ui->getSubGraph($startId); 
                 $dotString = $ui->activeGraphToDot($input, $subGraph); 
-                $svg = $ui->dot2svg($dotString); 
-                $urlDropdown = "/js/dropdown.js";
-                $urlStep = "/js/step.js";
-		return new Response('<!DOCTYPE html><html><head>'.
-                        '<script src='.$urlDropdown.' defer ></script>'.
-                        '<script src='.$urlStep.' defer ></script>' .
-                        '<script>var activeGraph ='. file_get_contents(__DIR__.'/../../input/Graphs/'.$input.'.actgraph') . '</script>' .
-                    '</head><body><button type=button id=stepButton>Step in</button>'.$svg.'</body></html>'
-                );
-	}
+                $svg = $ui->dot2svg($dotString);
+                return $svg; 
+        }
 }

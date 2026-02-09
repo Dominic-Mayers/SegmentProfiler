@@ -132,7 +132,7 @@ class UI {
                     $extra = $node['attributes']['extraLabel'] ?? ""; 
                     $dot .= "\"$nodeId\" [id=\"$nodeId\" label=\"{$this->getVizLabel($nodeId)}{$extra}\" ". 
                             "style=\"filled\" fontname=\"Courier-Bold\" shape=\"rect\" ".
-                            "URL=\"https://segmentprofiler.org/drawgraph/$input/$nodeId\" target=\"_parent\" ".
+                            //"URL=\"https://segmentprofiler.org/drawgraph/$input/$nodeId\" target=\"_parent\" ".
                             "colorscheme=\"oranges9\" fillcolor={$cM[$cC]['fl']} fontcolor=\"{$cM[$cC]['ft']}\"]". \PHP_EOL;
                 }
                 foreach ($A as $adj) {
@@ -242,6 +242,6 @@ class UI {
                 if (strlen($label) > 130) {
                     $label = substr($label, 0, 130) . "... truncated "; 
                 }
-		return "   $nodeId: $label$timeTxt";
+		return "$nodeId: $label$timeTxt";
 	}
 }

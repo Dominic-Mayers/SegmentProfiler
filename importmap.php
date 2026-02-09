@@ -16,13 +16,50 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
-    '@hotwired/stimulus' => [
-        'version' => '3.2.2',
-    ],
     '@symfony/stimulus-bundle' => [
         'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
     ],
+    'graph-app' => [
+        'path' => './assets/graph/graph-app.js',
+        'entrypoint' => true,
+    ],
+    '@hotwired/stimulus' => [
+        'version' => '3.2.2',
+    ],
     '@hotwired/turbo' => [
-        'version' => '7.3.0',
+        'version' => '8.0.23',
+    ],
+    '@hpcc-js/wasm' => [
+        'version' => '2.33.0',
+    ],
+    'react' => [
+        'version' => '19.2.4',
+    ],
+    'mobile-detect' => [
+        'version' => '1.4.5',
+    ],
+    'object-assign' => [
+        'version' => '4.1.1',
+    ],
+    'fbjs/lib/emptyObject' => [
+        'version' => '3.0.5',
+    ],
+    'fbjs/lib/emptyFunction' => [
+        'version' => '3.0.5',
+    ],
+    'svg-pan-zoom' => [
+        'version' => '3.6.2',
+    ],
+    'tiny-emitter' => [
+        'version' => '2.1.0',
+    ],
+    '@popperjs/core' => [
+        'version' => '2.11.8',
+    ],
+    'tiny-popup-menu' => [
+        'version' => '1.0.15',
+    ],
+    'ctxmenu' => [
+        'version' => '2.1.0',
     ],
 ];

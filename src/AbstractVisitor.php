@@ -86,7 +86,7 @@ abstract class AbstractVisitor  {
                                     $innerLabel = $groupKey;
                                     $groupRep = null; 
                                 }
-                                $this->groups[] = $groupId = $this->totalGraph->addGroup($innerLabel, $groupType, $group, $groupRep );
+                                $groupId = $this->totalGraph->addGroup($innerLabel, $groupType, $group, $groupRep );
                                 $this->totalGraph->createGroup($groupId);
                                 if ( ! empty($this->groupsWithNoInnerNodes[$groupType]) ) {
                                      $this->totalGraph->removeInnerNodes($groupId);

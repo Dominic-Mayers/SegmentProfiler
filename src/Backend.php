@@ -75,8 +75,8 @@ class Backend {
         }
 
         private function setTree ($input) {
-		$this->notesFile = new \SplFileObject(__DIR__. '/Fixtures/'.$input.'.profile');
-        	$this->totalGraph->getTree($this->notesFile);
+		$notesFile = new \SplFileObject(__DIR__. '/Fixtures/'.$input.'.profile');
+        	$this->totalGraph->getTree($notesFile);
                 $this->graphTransformationAPI->setTreeKeyWithEmpty();
                 $this->graphTransformationAPI->setTreeKey();
                 //xdebug_break();
