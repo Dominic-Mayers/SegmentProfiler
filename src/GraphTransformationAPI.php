@@ -91,7 +91,7 @@ class GraphTransformationAPI {
         }
 
         public function contractionOnTwe () {
-                $visitorContractionOnTwe = new VisitorContractionOnTwe($this->totalGraph, 3 , 20); 
+                $visitorContractionOnTwe = new VisitorContractionOnTwe($this->totalGraph, 2 , 3); 
                 $this->traversal->visitNodes($visitorContractionOnTwe); 
         }
 

@@ -19,10 +19,6 @@ return [
     '@symfony/stimulus-bundle' => [
         'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
     ],
-    'graph-app' => [
-        'path' => './assets/graph/graph-app.js',
-        'entrypoint' => true,
-    ],
     '@hotwired/stimulus' => [
         'version' => '3.2.2',
     ],
@@ -61,5 +57,9 @@ return [
     ],
     'ctxmenu' => [
         'version' => '2.1.0',
+    ],
+    'graph-app-test' => [
+        'path' => './assets/graph/graph-app-test.js',
+        'entrypoint' => true,
     ],
 ];

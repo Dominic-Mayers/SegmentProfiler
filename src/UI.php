@@ -38,20 +38,22 @@ class UI {
 		$cM = $this->cM; $nC = count( $cM ); $V  = & $this->activeGraph->nodes; 
 		$totalTime = 0;
 		foreach ( $V as  $nodeId => $node ) {
-			$timeExc = $node['attributes']['timeExclusive'];
+			$timeExc = $node['attributes']['timeExclusive'];  
 			$sortedTimes[$nodeId] = $timeExc;
 			$totalTime += $timeExc;
 		}
-                if($totalTime === 0) {
-                    // weighted quantiles make no sense when the weights are all zeros. 
-                    foreach ( $V as $nodeId => $node ) { $V[$nodeId]['attributes']['colorCode'] = (int) $nC / 2; }
-                    return; 
-                }
+                
+                // A trick to manage edge cases.
+                $totalTimeEdge = $totalTime * 100 + 1;
+                $scale = $nC * 100 / $totalTimeEdge;
+                
                 $partialTime = 0; 
+                // TODO: Avoid the hack that set partialTime = 1 as if there was already one unit
+                // of time elepased before we start. 
 		asort( $sortedTimes );
 		foreach ( $sortedTimes as  $nodeId => $currentTime)  {
 			$partialTime += $currentTime;
-			$pernCtile = (int) ceil(($nC * $partialTime)/ $totalTime) - 1; // Use ceil - 1, because a pernCtile includes its max.
+			$pernCtile = (int) floor($scale * $partialTime );
                         $V[$nodeId]['attributes']['colorCode'] =  $pernCtile; 
 		}
 	}
@@ -100,7 +102,8 @@ class UI {
 	}
 
         public function dot2svg ($dotString) {
-            $executable = "/usr/bin/dot -Tsvg"; 
+            $executable = "dot -Tsvg | sed -n '/<svg/,\$p'";
+
             $descriptorspec = array(
                 0 => array("pipe", "r"),
                 1 => array("pipe", "w"),
@@ -116,6 +119,9 @@ class UI {
             $svg = stream_get_contents($pipes[1]); 
             fclose($pipes[1]);
             fclose($pipes[2]);
+            $uniqueId = uniqid();
+            $svg = str_replace('id="graph0"', 'id="graph_' . $uniqueId . '"', $svg);
+
             return $svg; 
         }
 

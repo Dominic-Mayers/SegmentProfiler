@@ -13,22 +13,11 @@ class SegmentProfilerController extends AbstractController {
         #[Route('/show/{input}/{startId}/{toUngroup}', name: 'show')]
         public function show(Backend $backend, UI $ui, $input, $startId = null, $toUngroup = "") : Response {
                 $svg = $this->computeSvg ($backend, $ui, $input, $toUngroup, $startId);   
-                return $this->render('graph/show.html.twig', [
+                return $this->render('graph/show-test.html.twig', [
                     'svg' => $svg,
                 ]);
         }
-		
-	#[Route('/drawgraph/{input}/{startId}/{toUngroup}', name: 'drawgraph' )]
-	public function drawGraph(Backend $backend, UI $ui, $input, $startId = null, $toUngroup = ""): Response {
-                $svg = $this->computeSvg ($backend, $ui, $input, $toUngroup, $startId);             
-                $urlDropdown = "/js/dropdown.js";
-                $urlStep = "/js/step.js";
-		return new Response('<!DOCTYPE html><html><head>'.
-                    '<script src='.$urlDropdown.' defer ></script>'.
-                    '</head><body>'.$svg.'</body></html>'
-                );
-	}
-        
+		        
         private function computeSvg (Backend $backend, UI $ui, $input, $toUngroup, $startId) {
                 set_time_limit(600); 
 		$backend->setDefaultGroups ($input);
