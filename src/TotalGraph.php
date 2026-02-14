@@ -76,6 +76,7 @@ class TotalGraph {
 		} else {
                         $nodeId = self::getNodeId($this->treeType, $noteNb);
                         $this->stopNodeIfNodeIdDoesNotMatch($currentId, $nodeId); 
+                        if ($key === 'timeFct') {  $key = 'timeInclusive' ;}  
 			$this->nodes[$currentId]['attributes'][$key] = $value;
 			//echo "Set group:$key = $value".PHP_EOL;
 			if ($key === "endName") {
@@ -183,12 +184,12 @@ class TotalGraph {
                         $this->nodes[$groupId]['attributes']['treeKeyWithEmpty'] = $rootRep['attributes']['treeKeyWithEmpty'];
                 }
 		$this->nodes[$groupId]['attributes']['innerLabel'] = $innerLabel;
-		$this->nodes[$groupId]['attributes']['timeFct'] = 0;
+		$this->nodes[$groupId]['attributes']['timeInclusive'] = 0;
 		$this->nodes[$groupId]['attributes']['timeExclusive'] = 0; 
 		foreach ($innerNodesId as $innerNodeId) {
 			$this->nodes[$innerNodeId]['groupId'] = $groupId;
 			$this->nodes[$groupId]['innerNodesId'][] = $innerNodeId;
-			$this->nodes[$groupId]['attributes']['timeFct']       += $this->nodes[$innerNodeId]['attributes']['timeFct'];
+			$this->nodes[$groupId]['attributes']['timeInclusive']       += $this->nodes[$innerNodeId]['attributes']['timeInclusive'];
 			$this->nodes[$groupId]['attributes']['timeExclusive'] += $this->nodes[$innerNodeId]['attributes']['timeExclusive'];
                         //echo "Set groupId of $innerNodeId to $groupId and time attributes of that group.". PHP_EOL; 
                 }
@@ -271,14 +272,14 @@ class TotalGraph {
             $node = &$this->nodes[$currentId]; 
 	    $adj = $this->arrowsOut[$currentId] ?? []; 
 	    foreach ( $adj as $targetId => $arrow ) {
-	        $totalTimeChildren += $this->nodes[$targetId]['attributes']['timeFct'];
+	        $totalTimeChildren += $this->nodes[$targetId]['attributes']['timeInclusive'];
 	    }
-	    if ( isset( $node['attributes']['timeFct'] ) ) {
-	        $timeExclusive = $node['attributes']['timeFct'] - $totalTimeChildren;
+	    if ( isset( $node['attributes']['timeInclusive'] ) ) {
+	        $timeExclusive = $node['attributes']['timeInclusive'] - $totalTimeChildren;
 		$node['attributes']['timeExclusive'] = $timeExclusive;
 	    } else {
 		// Normally, this should only happen for the root.
-		$node['attributes']['timeFct'] = $totalTimeChildren;
+		$node['attributes']['timeInclusive'] = $totalTimeChildren;
 		$node['attributes']['timeExclusive'] = 0; 
 	    }
 	}

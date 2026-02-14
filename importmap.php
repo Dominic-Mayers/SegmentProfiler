@@ -25,9 +25,6 @@ return [
     '@hotwired/turbo' => [
         'version' => '8.0.23',
     ],
-    '@hpcc-js/wasm' => [
-        'version' => '2.33.0',
-    ],
     'react' => [
         'version' => '19.2.4',
     ],
@@ -61,5 +58,12 @@ return [
     'graph-app-test' => [
         'path' => './assets/graph/graph-app-test.js',
         'entrypoint' => true,
+    ],
+    'graph-app' => [
+        'path' => './assets/graph/graph-app.js',
+        'entrypoint' => true,
+    ],
+    '@hpcc-js/wasm' => [
+        'path' => './assets/vendor/node_modules/@hpcc-js/wasm/dist/index.js',
     ],
 ];

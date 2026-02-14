@@ -41,7 +41,7 @@ class Segment {
     
     static public function endSegment($segment, $endName="none") {
         $segment->timeFct +=  hrtime(true);
-        fwrite(self::$fh, $segment->segmentId . ":timeFct=" . $segment->timeFct . PHP_EOL .
+        fwrite(self::$fh, $segment->segmentId . ":timeInclusive=" . $segment->timeFct . PHP_EOL .
                           $segment->segmentId . ":endName=" . $endName . PHP_EOL);
     }
     

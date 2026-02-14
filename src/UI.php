@@ -31,32 +31,87 @@ class UI {
 		private UrlGeneratorInterface $urlGenerator,
 	) {
 	}
-	
-        public function setColorCode() {
-                // The color code of each node is its  $nC quantile weighted per exclusive time.
-                // We take the convention that quantiles start at 0.
-		$cM = $this->cM; $nC = count( $cM ); $V  = & $this->activeGraph->nodes; 
-		$totalTime = 0;
-		foreach ( $V as  $nodeId => $node ) {
-			$timeExc = $node['attributes']['timeExclusive'];  
-			$sortedTimes[$nodeId] = $timeExc;
-			$totalTime += $timeExc;
-		}
-                
-                // A trick to manage edge cases.
-                $totalTimeEdge = $totalTime * 100 + 1;
-                $scale = $nC * 100 / $totalTimeEdge;
-                
-                $partialTime = 0; 
-                // TODO: Avoid the hack that set partialTime = 1 as if there was already one unit
-                // of time elepased before we start. 
-		asort( $sortedTimes );
-		foreach ( $sortedTimes as  $nodeId => $currentTime)  {
-			$partialTime += $currentTime;
-			$pernCtile = (int) floor($scale * $partialTime );
-                        $V[$nodeId]['attributes']['colorCode'] =  $pernCtile; 
-		}
-	}
+
+
+
+/**
+ * Main entry: compute nC-ciles (colorCode) for the active graph,
+ * using tie-handling (half-weight before) and floating-point safe scale.
+ */
+public function setColorCode() {
+    $nC = count($this->cM);
+    $V  = &$this->activeGraph->nodes;
+
+    // Step 1: extract weights (timeExclusive)
+    $weights = $this->extractWeights($V);
+    $totalWeight = array_sum($weights);
+
+    // Step 2: compute robust scale with phantom weight epsilon
+    $scale = $this->computeScale($totalWeight, $nC);
+
+    // Step 3: group nodes by weight to handle ties
+    $groups = $this->groupNodesByWeight($weights);
+
+    // Step 4: compute CW_i with half-weight before and assign nC-ciles
+    $this->assignNCcilesWithTies($V, $groups, $scale, $nC);
+}
+
+/**
+ * Extract weights from nodes.
+ */
+private function extractWeights(array $V): array {
+    $weights = [];
+    foreach ($V as $nodeId => $node) {
+        $weights[$nodeId] = $node['attributes']['timeExclusive'];
+    }
+    return $weights;
+}
+
+/**
+ * Compute safe scale using phantom weight epsilon.
+ */
+private function computeScale(float $totalWeight, int $nC): float {
+    $epsilonFP = PHP_FLOAT_EPSILON * $totalWeight;
+    $epsilon = max($epsilonFP, 0.01);  // minimal phantom weight
+    return $nC / ($totalWeight + $epsilon);
+}
+
+/**
+ * Group nodes by weight (weight => array of nodeIDs).
+ */
+private function groupNodesByWeight(array $weights): array {
+    $groups = [];
+    foreach ($weights as $nodeId => $w) {
+        $groups[$w][] = $nodeId;
+    }
+    ksort($groups, SORT_NUMERIC); // ascending order of weights
+    return $groups;
+}
+
+/**
+ * Compute cumulative weights using half-weight before for ties,
+ * then assign nC-ciles (colorCode) to nodes.
+ */
+private function assignNCcilesWithTies(array &$V, array $groups, float $scale, int $nC): void {
+    $cumulative = 0.0;
+
+    foreach ($groups as $weight => $nodeIDs) {
+        $nb = count($nodeIDs);
+        // CW_i = sum of previous weights + half of this group
+        $CW_i = $cumulative + 0.5 * $weight * $nb;
+
+        // Compute nC-cile index
+        $index = (int) floor($CW_i * $scale);
+
+        // Assign same index to all nodes in this tied group
+        foreach ($nodeIDs as $nodeId) {
+            $V[$nodeId]['attributes']['colorCode'] = $index;
+        }
+
+        // Update cumulative sum for next group
+        $cumulative += $weight * $nb;
+    }
+}
         
 	public function getSubGraph($startId, $arrows = null) : array {
                 if (empty($startId)) {
@@ -238,7 +293,7 @@ class UI {
 		if ( isset($node['attributes']['timeExclusive'] ) ) {
 			$excTime = $node['attributes']['timeExclusive'];
 			$excTimeInMillisec = number_format($excTime / 1E+6, 3);
-			$incTime = $node['attributes']['timeFct'];
+			$incTime = $node['attributes']['timeInclusive'];
 			$incTimeInMillisec = number_format($incTime / 1E+6, 3);
 			$timeTxt = "($excTimeInMillisec, $incTimeInMillisec)";  
 		} else {

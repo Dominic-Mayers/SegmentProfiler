@@ -13,7 +13,7 @@ class Backend {
 	) {
 	}
 	        
-	public function setDefaultGroups ($input) {
+	public function computeGraphStates ($input) {
                 $filenameTotal  = __DIR__ . '/../input/Graphs/'.$input.'.totgraph'; 
                 $filenameActive = __DIR__ . '/../input/Graphs/'.$input.'.actgraph'; 
                 if (false && file_exists ($filenameTotal) && file_exists ($filenameActive) ) {
@@ -31,6 +31,7 @@ class Backend {
                 //$this->graphTransformationAPI->groupTTweD();                
                 $this->saveGraphInFile($filenameTotal, false); 
                 $this->saveGraphInFile($filenameActive, true);
+                return [$this->activeGraph->nodes, $this->activeGraph->arrowsOut]; 
         }
 
         private function restoreGraphFromFile ($filename, $active) {
