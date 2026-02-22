@@ -28,3 +28,5 @@ composer.lock
 public/phpinfo.php
 input/*
 src/Fixtures/*
+public/favicon.ico
+assets/test/

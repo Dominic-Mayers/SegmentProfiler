@@ -64,6 +64,10 @@ return [
         'entrypoint' => true,
     ],
     '@hpcc-js/wasm' => [
-        'path' => './assets/vendor/node_modules/@hpcc-js/wasm/dist/index.js',
+        'path' => './node_modules/@hpcc-js/wasm/dist/index.js',
+    ],
+    'test/main.js' => [
+        'path' => './assets/test/main.js',
+        'entrypoint' => true,
     ],
 ];
