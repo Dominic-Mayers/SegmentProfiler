@@ -28,9 +28,7 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         public function beforeChildrenDefinition($currentId) {
             $adjArrowsIn  = $this->totalGraph->adjActiveArrowsIn($currentId);
             $adjArrowsOut = $this->totalGraph->adjActiveArrowsOut($currentId);
-            if ( ! empty ($adjArrowsIn)  || ! empty ($adjArrowsOut) || $currentId === $this->totalGraph->rootId) {
-                $this->activeGraph->nodes[$currentId] = $this->totalGraph->nodes[$currentId];
-            }
+            $this->activeGraph->nodes[$currentId] = $this->totalGraph->nodes[$currentId];
             if ( ! empty($adjArrowsIn)) {    
                 $this->activeGraph->arrowsIn[$currentId] = $adjArrowsIn;
             }
