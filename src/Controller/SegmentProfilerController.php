@@ -6,11 +6,18 @@ use App\ActiveGraph;
 use App\Backend;
 use App\UI;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class SegmentProfilerController extends AbstractController {
     
+        #[Route('/expansGroup/{input}/{groupId}', name: 'expandGroup')]
+        public function expandGroup(Backend $backend, $input,  $groupId) : JsonResponse {
+                $state = $this->computeState ($backend, $input, $groupId); // To modify 
+                return $this->json($state); 
+        }
+
         #[Route('/show/{input}', name: 'show')]
         public function show(Backend $backend, $input) : Response {
                 $state = $this->computeState ($backend, $input);   
