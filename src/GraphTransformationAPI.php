@@ -1,16 +1,16 @@
 <?php
 namespace App;
-use Graphp\Graph\Graph; 
+//use Graphp\Graph\Graph; 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use App\TotalGraph; 
 use App\ActiveGraph; 
 use App\Traversal; 
 use App\VisitorDefaultActiveGraph; 
-use App\VisitorT;
-use App\VisitorTwe;
+//use App\VisitorT;
+//use App\VisitorTwe;
 use App\VisitorCL;
-use App\VisitorCT;
-use App\VisitorCTwe;
+//use App\VisitorCT;
+//use App\VisitorCTwe;
 use App\VisitorTreeKey;
 use App\VisitorTreeWithEmptyKey;
 
@@ -47,33 +47,33 @@ class GraphTransformationAPI {
 		$this->traversal->visitNodes($visitorCTwe);
 	}
 
-        public function groupT() {
-                $visitorT = new VisitorT(
-                        $this->totalGraph,
-                        $this->groupsWithNoInnerNodes); 
-		$this->traversal->visitNodes( $visitorT);
-	}
+        //public function groupT() {
+        //        $visitorT = new VisitorT(
+        //                $this->totalGraph,
+        //                $this->groupsWithNoInnerNodes); 
+	//	$this->traversal->visitNodes( $visitorT);
+	//}
 
-	public function groupTwe() {
-                $visitorTwe = new VisitorTwe(
-                        $this->totalGraph,
-                        $this->groupsWithNoInnerNodes); 
-		$this->traversal->visitNodes($visitorTwe);
-	}
+	//public function groupTwe() {
+        //        $visitorTwe = new VisitorTwe(
+        //                $this->totalGraph,
+        //                $this->groupsWithNoInnerNodes); 
+	//	$this->traversal->visitNodes($visitorTwe);
+	//}
        
-	public function groupTTD() {
-                $visitorTTD = new VisitorTTD(
-                        $this->totalGraph,
-                        $this->groupsWithNoInnerNodes);
-                $this->traversal->visitNodes($visitorTTD);                 
-	}        
+	//public function groupTTD() {
+        //        $visitorTTD = new VisitorTTD(
+        //                $this->totalGraph,
+        //                $this->groupsWithNoInnerNodes);
+        //        $this->traversal->visitNodes($visitorTTD);                 
+	//}        
 
-	public function groupTTweD() {
-                $visitorTTweD = new VisitorTTweD(
-                        $this->totalGraph,
-                        $this->groupsWithNoInnerNodes);
-                $this->traversal->visitNodes($visitorTTweD);                 
-	}        
+	//public function groupTTweD() {
+        //        $visitorTTweD = new VisitorTTweD(
+        //                $this->totalGraph,
+        //                $this->groupsWithNoInnerNodes);
+        //        $this->traversal->visitNodes($visitorTTweD);                 
+	//}        
         
         public function setTreeKey () {
                 $visitorTreeKey = new VisitorTreeKey($this->totalGraph); 
