@@ -24,7 +24,7 @@ class Backend {
                 // Of course, it is pointless to modify below if the graphs are stored in files. 
                 $this->setTree($input);
                 //$this->graphTransformationAPI->createDefaultActiveGraph();
-                $this->graphTransformationAPI->contractionOnTwe();
+                //$this->graphTransformationAPI->contractionOnTwe();
                 $this->graphTransformationAPI->groupCL();
                 $this->graphTransformationAPI->createDefaultActiveGraph();
                 //$this->graphTransformationAPI->groupCTwe();
