@@ -26,9 +26,12 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         }
         
         public function beforeChildrenDefinition($currentId) {
+            $node = $this->totalGraph->nodes[$currentId]; 
+            unset($node['innerNodesId']); 
+            $this->activeGraph->nodes[$currentId] = $node;
             $adjArrowsOut = $this->totalGraph->adjActiveArrowsOut($currentId);
-            $this->activeGraph->nodes[$currentId] = $this->totalGraph->nodes[$currentId];
-            if ( ! empty($adjArrowsOut)) {    
+            if ( ! empty($adjArrowsOut)) {
+                unset($adjArrowsOut['timeInclusive']); 
                 $this->activeGraph->arrowsOut[$currentId] = $adjArrowsOut;   
             }
         }
