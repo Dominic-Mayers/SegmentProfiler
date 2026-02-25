@@ -12,11 +12,13 @@ abstract class AbstractVisitorContraction extends AbstractVisitor {
         private $contiguousGroups;
         
         public function __construct(
-                TotalGraph $totalGraph, 
+                BaseState $baseState, 
+                TotalGraph $totalGraph,
+                GroupingState $groupingState, 
                 int $chosenParameter = 0, 
         ) {
             $this->chosenParameter = $chosenParameter; 
-            parent::__construct($totalGraph);
+            parent::__construct($baseState, $totalGraph, $groupingState);
         }
 
         public function getHeights() {
@@ -55,8 +57,8 @@ abstract class AbstractVisitorContraction extends AbstractVisitor {
             ///*
             foreach ($this->contiguousGroups as $nodeId => $group) {
                 if (count($group) > 1 ) {
-                    $innerLabel = $this->totalGraph->nodes[$nodeId]['attributes']['innerLabel'];
-                    $groupRep = $this->totalGraph->nodes[$nodeId]; 
+                    $innerLabel = $this->baseState->nodes[$nodeId]['attributes']['innerLabel'];
+                    $groupRep = $this->baseState->nodes[$nodeId]; 
                     $groupId = $this->totalGraph->addGroup($innerLabel, 'CTweC', $group, $groupRep);
                     $this->totalGraph->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['CTweC']) ) {

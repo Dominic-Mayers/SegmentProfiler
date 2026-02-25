@@ -9,7 +9,7 @@ class VisitorCL extends AbstractVisitorT {
                 $this->groupSiblingsPerCallBack(
                         $currentId, 
                         "CL", 
-                        fn($childId) : string => $this->totalGraph->nodes[$childId]['attributes']['innerLabel']  
+                        fn($childId) : string => $this->baseState->nodes[$childId]['attributes']['innerLabel']  
                 );
 	}
 }

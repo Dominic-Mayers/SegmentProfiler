@@ -1,6 +1,7 @@
 <?php
 namespace App;
 use App\GraphTransformationAPI;
+use App\BaseState; 
 use App\TotalGraph; 
 use App\ActiveGraph;
 
@@ -8,6 +9,7 @@ class Backend {
 	
 	public function __construct(
                 private GraphTransformationAPI $graphTransformationAPI, 
+                private BaseState $baseState, 
                 private TotalGraph $totalGraph,
                 private ActiveGraph $activeGraph, 
 	) {
@@ -69,7 +71,7 @@ class Backend {
             if ($active) {
                 $gr =& $this->activeGraph;
             } else {
-                $gr =& $this->totalGraph;                
+                $gr =& $this->baseState;                
             }
             $serialGraph = json_encode([$gr->nodes, $gr->arrowsOut]);
             file_put_contents($filename, $serialGraph);

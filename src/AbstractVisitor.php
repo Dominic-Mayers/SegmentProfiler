@@ -2,7 +2,9 @@
 
 namespace App;
 
-use App\TotalGraph; 
+use App\BaseState; 
+use App\GroupingState; 
+use App\TotalGraph;
 
 #[Exclude]
 abstract class AbstractVisitor  {
@@ -11,9 +13,11 @@ abstract class AbstractVisitor  {
         private $stackedMultipleIncoming = [];
         private $used; 
         
-        public function __construct (protected  TotalGraph $totalGraph, 
+        public function __construct (protected BaseState $baseState,
+                                     protected TotalGraph $totalGraph,
+                                     protected GroupingState $groupingState,  
                                      private $groupsWithNoInnerNodes = null) {
-                $this->totalGraph = $totalGraph;
+                //$this->totalGraph = $totalGraph;
                 $this->groupsWithNoInnerNodes = $groupsWithNoInnerNodes;
                 $this->used = false; 
         }
@@ -53,7 +57,7 @@ abstract class AbstractVisitor  {
                     exit(); 
                 }
                 $currentChildrenArrowsOut = [];
-                $adjAllActiveOut = $this->totalGraph->adjActiveArrowsOut($currentId);
+                $adjAllActiveOut = $this->groupingState->adjActiveArrowsOut($currentId);
                 foreach ($adjAllActiveOut as $targetId => $arrow) {
                         if (! $this->isStackedChild($targetId)) {
                                 $this->stackedMultipleIncoming[$targetId] = true; 
@@ -67,7 +71,7 @@ abstract class AbstractVisitor  {
         
         protected function groupSiblingsPerCallBack($currentId, $groupType, $groupKeyCallback) {
         	$innerLabelGroups = [];
-		$adj = $this->totalGraph->adjActiveArrowsOut($currentId);
+		$adj = $this->groupingState->adjActiveArrowsOut($currentId);
 		foreach ($adj as $targetId => $arrow) {
                         if ($targetId === $currentId) {continue;}
                         $groupKey = $groupKeyCallback($targetId); 
@@ -98,7 +102,7 @@ abstract class AbstractVisitor  {
         private function isStackedChild($targetId) {
                 // This is only valid when called in setChildrenArrowsOut, which
                 // is itself called in the beforeChildren method. 
-                $isStacked = $this->totalGraph->incomingActiveOrder($targetId) > 1 &&  
+                $isStacked = $this->groupingState->incomingActiveOrder($targetId) > 1 &&  
                         isset($this->stackedMultipleIncoming[$targetId]);
                 return $isStacked; 
         }

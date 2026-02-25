@@ -2,13 +2,14 @@
 
 namespace App;
 
+use App\BaseState; 
 use App\TotalGraph;
 use App\AbstractVisitor;
 
 class Traversal {
     
         
-        public function __construct(private TotalGraph $totalGraph) {
+        public function __construct(private BaseState $baseState, private TotalGraph $totalGraph) {
         }
         
 	public function visitNodes(AbstractVisitor $visitor, $rootId = null) {
@@ -38,7 +39,7 @@ class Traversal {
 	}
         
         private function findActiveContainingGroup($nodeId) {
-            while (($groupId = $this->totalGraph->nodes[$nodeId]['groupId'] ?? false) && null !== ($nodeId = $groupId));            
-            return isset($this->totalGraph->nodes[$nodeId]) ?  $nodeId: false; 
+            while (($groupId = $this->baseState->nodes[$nodeId]['groupId'] ?? false) && null !== ($nodeId = $groupId));            
+            return isset($this->baseState->nodes[$nodeId]) ?  $nodeId: false; 
         }
 }

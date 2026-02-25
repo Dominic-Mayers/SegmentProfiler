@@ -2,6 +2,8 @@
 namespace App;
 //use Graphp\Graph\Graph; 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use App\BaseState; 
+use App\GroupingState; 
 use App\TotalGraph; 
 use App\ActiveGraph; 
 use App\Traversal; 
@@ -17,7 +19,9 @@ use App\VisitorTreeWithEmptyKey;
 class GraphTransformationAPI {
 	
 	public function __construct(
+                private BaseState $baseState, 
                 private TotalGraph $totalGraph,
+                private GroupingState $groupingState, 
                 private ActiveGraph $activeGraph, 
                 private Traversal $traversal,
 		private UrlGeneratorInterface $urlGenerator,
@@ -27,7 +31,9 @@ class GraphTransformationAPI {
 	
         public function groupCL() {
                 $visitorCL = new VisitorCL(
+                        $this->baseState, 
                         $this->totalGraph,
+                        $this->groupingState, 
                         $this->groupsWithNoInnerNodes); 
 		$this->traversal->visitNodes($visitorCL);
 	}
@@ -76,29 +82,31 @@ class GraphTransformationAPI {
 	//}        
         
         public function setTreeKey () {
-                $visitorTreeKey = new VisitorTreeKey($this->totalGraph); 
+                $visitorTreeKey = new VisitorTreeKey($this->baseState, $this->totalGraph, $this->groupingState); 
                 $this->traversal->visitNodes($visitorTreeKey); 
         }
 
         public function setTreeKeyWithEmpty () {
-                $visitorTreeWithEmptyKey = new VisitorTreeWithEmptyKey($this->totalGraph); 
+                $visitorTreeWithEmptyKey = new VisitorTreeWithEmptyKey($this->baseState, $this->totalGraph, $this->groupingState); 
                 $this->traversal->visitNodes($visitorTreeWithEmptyKey); 
         }
 
         public function contractionOnT () {
-                $visitorContractionOnT = new VisitorContractionOnT($this->totalGraph); 
+                $visitorContractionOnT = new VisitorContractionOnT($this->baseState, $this->totalGraph, $this->groupingState); 
                 $this->traversal->visitNodes($visitorContractionOnT); 
         }
 
         public function contractionOnTwe () {
-                $visitorContractionOnTwe = new VisitorContractionOnTwe($this->totalGraph, 2 , 3); 
+                $visitorContractionOnTwe = new VisitorContractionOnTwe($this->baseState, $this->totalGraph, $this->groupingState,  2 , 3); 
                 $this->traversal->visitNodes($visitorContractionOnTwe); 
         }
 
         public function createDefaultActiveGraph () {
                 // To be called once we have the totalGraph, after the groups have been created. 
                 $visitorDefaultActiveGraph = new VisitorDefaultActiveGraph(
-                        $this->totalGraph, 
+                        $this->baseState,
+                        $this->totalGraph,
+                        $this->groupingState, 
                         $this->activeGraph);
                 $this->traversal->visitNodes($visitorDefaultActiveGraph);
         }

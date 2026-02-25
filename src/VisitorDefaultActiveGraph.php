@@ -11,10 +11,12 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         private ActiveGraph $activeGraph; 
 
         public function __construct (
+                BaseState $baseState,
                 TotalGraph $totalGraph,
+                GroupingState $groupingState, 
                 ActiveGraph $activeGraph
         ) {
-            parent::__construct($totalGraph);
+            parent::__construct($baseState, $totalGraph, $groupingState);
             $this->activeGraph = $activeGraph;
         }
         
@@ -26,10 +28,10 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         }
         
         public function beforeChildrenDefinition($currentId) {
-            $node = $this->totalGraph->nodes[$currentId]; 
+            $node = $this->baseState->nodes[$currentId]; 
             unset($node['innerNodesId']); 
             $this->activeGraph->nodes[$currentId] = $node;
-            $adjArrowsOut = $this->totalGraph->adjActiveArrowsOut($currentId);
+            $adjArrowsOut = $this->groupingState->adjActiveArrowsOut($currentId);
             if ( ! empty($adjArrowsOut)) {
                 unset($adjArrowsOut['timeInclusive']); 
                 $this->activeGraph->arrowsOut[$currentId] = $adjArrowsOut;   
