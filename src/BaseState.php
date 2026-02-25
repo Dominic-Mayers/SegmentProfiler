@@ -114,4 +114,29 @@ class BaseState {
             }
         }
     }
+
+    public function addNode($type, int|null $nodeNb = null) : string {
+        $nodeId = self::getNodeId($type, $nodeNb);
+        $this->nodes[$nodeId]['type'] = $type; 
+        $this->nodes[$nodeId]['attributes']['nodeId'] = $nodeId;
+        //echo "Added node $nodeId".PHP_EOL; 
+        return $nodeId; 
+    }
+
+    public function createArrow(string $sourceId, string $targetId, $calls = 1) {
+        $arrow['sourceId']      = $sourceId;
+        $arrow['targetId']      = $targetId;
+        $arrow['calls']         = $calls; 
+        $arrow['timeInclusive'] = 0; 
+        return $arrow;
+    }
+
+
+    public static function getNodeId($prefix, int|null $nb) {
+        static $n = [];
+        $n[$prefix] ??= 1; // We could start at 0. No conflicr with root. It's not used for tree nodes.  
+        $nb ??= $n[$prefix]++; 
+        $nodeId =  $prefix . $nb;
+	return $nodeId; 
+    }    
 }

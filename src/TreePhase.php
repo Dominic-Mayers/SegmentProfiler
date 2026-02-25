@@ -9,7 +9,7 @@ namespace App;
 
 use App\BaseState; 
 
-class TotalGraph {
+class TreePhase {
         public string   $treeType = "S"; // S for segment. 
         public string   $rootId; // Needed in Traversal to initiate toProcess
         // For each type of treeKey, gives the treeLabel for each treeKey. 
@@ -20,7 +20,7 @@ class TotalGraph {
         private int     $rootNb = 0; // The notes start at 1. 
         
         public function __construct(private BaseState $baseState ) {
-            $this->rootId = $this->getNodeId($this->treeType, $this->rootNb);
+            $this->rootId = BaseState::getNodeId($this->treeType, $this->rootNb);
         }
                         
         public function getTree(\Iterator $notesFile, ) {
@@ -43,7 +43,7 @@ class TotalGraph {
                         $currentId = $this->createTreeNode($currentId, $noteNb, $value); 
                         return $currentId; 
 		} else {
-                        $nodeId = self::getNodeId($this->treeType, $noteNb);
+                        $nodeId = BaseState::getNodeId($this->treeType, $noteNb);
                         $this->stopNodeIfNodeIdDoesNotMatch($currentId, $nodeId); 
                         if ($key === 'timeFct') {  $key = 'timeInclusive' ;}  
 			$this->baseState->nodes[$currentId]['attributes'][$key] = $value;
@@ -59,13 +59,13 @@ class TotalGraph {
         private function createTreeNode ($currentId, $noteNb, $startName) : string {
 
                 // Set the new node (target of new arrow) 
-                $nodeId = $this->addNode($this->treeType, $noteNb); 
+                $nodeId = $this->baseState->addNode($this->treeType, $noteNb); 
 		$this->baseState->nodes[$nodeId]['attributes']['parentId'] = $currentId;
 		$this->baseState->nodes[$nodeId]['attributes']['startName'] = $startName;
                 // Set the new incoming arrow toward the node, even when the node is the root
                 // The one toward the root will not be included in the active graph. It will
                 // not be visited in traversal, only seen if we look for that incoming arrow.
-                $newArrow = $this->createArrow($currentId, $nodeId);                   
+                $newArrow = $this->baseState->createArrow($currentId, $nodeId);                   
                 $this->baseState->arrowsOut[$currentId][$nodeId] = $newArrow;
                 $this->baseState->arrowsIn[$nodeId][$currentId] = $newArrow;
                 return $nodeId; 
@@ -122,128 +122,6 @@ class TotalGraph {
 		$value = trim($noteArr[1]); 
                 return [$noteNb, $key,  $value]; 
         }
-        
-        private function addNode($type, int|null $nodeNb = null) : string {
-             
-		$nodeId = self::getNodeId($type, $nodeNb);
-                $this->baseState->nodes[$nodeId]['type'] = $type; 
-		$this->baseState->nodes[$nodeId]['attributes']['nodeId'] = $nodeId;
-                //echo "Added node $nodeId".PHP_EOL; 
-                return $nodeId; 
-        }
-
-        private static function getNodeId($prefix, int|null $nb) {
-		static $n = [];
-		$n[$prefix] ??= 1; // We could start at 0. No conflicr with root. It's not used for tree nodes.  
-                $nb ??= $n[$prefix]++; 
-                $nodeId =  $prefix . $nb;
-		return $nodeId; 
-	}
-        
-        public function addGroup($innerLabel, $type, $innerNodesId, $rootRep = null) {
-                if ( count($innerNodesId) == 1)  {
-                        echo "Error: attempting to create a singleton".PHP_EOL; 
-                        exit();  
-                }
-                $groupId = $this->addNode($type); 
-                //echo "Adding group $groupId." . PHP_EOL; 
-                
-                if ( isset($rootRep) ) {
-                        $this->baseState->nodes[$groupId]['attributes']['treeKey'] = $rootRep['attributes']['treeKey'];
-                        $this->baseState->nodes[$groupId]['attributes']['treeKeyWithEmpty'] = $rootRep['attributes']['treeKeyWithEmpty'];
-                }
-		$this->baseState->nodes[$groupId]['attributes']['innerLabel'] = $innerLabel;
-		$this->baseState->nodes[$groupId]['attributes']['timeExclusive'] = 0; 
-		foreach ($innerNodesId as $innerNodeId) {
-			$this->baseState->nodes[$innerNodeId]['groupId'] = $groupId;
-			$this->baseState->nodes[$groupId]['innerNodesId'][] = $innerNodeId;
-			$this->baseState->nodes[$groupId]['attributes']['timeExclusive'] += 
-                                $this->baseState->nodes[$innerNodeId]['attributes']['timeExclusive'];
-                        //echo "Set groupId of $innerNodeId to $groupId and time attributes of that group.". PHP_EOL; 
-                }
-                //echo "Added group $groupId.". PHP_EOL; 
-		return $groupId;
-	}
-
-        public function createGroup($groupId) {
-
-		$innerNodesId = $this->baseState->nodes[$groupId]['innerNodesId'];
-                $this->baseState->nodes[$groupId]['attributes']['timeInclusive'] = 0;
-                $groupTimeInclusive = & $this->baseState->nodes[$groupId]['attributes']['timeInclusive']; 
-		foreach ($innerNodesId as $nodeId) {
-			$arrowsOut = $this->baseState->arrowsOut[$nodeId] ?? [];
-			foreach ($arrowsOut as $targetId => $arrowOut) {
-				$this->baseState->arrowsOut[$groupId][$targetId] ??= $this->createArrow($groupId, $targetId, 0);
-				$this->baseState->arrowsOut[$groupId][$targetId]['calls'] += $arrowOut['calls'];
-                                //echo "Adding {$arrowOut['calls']} outgoing arrow from added $groupId" . ; 
-                                //" to $targetId because of its inner node $nodeId<br>".PHP_EOL;
-				$this->baseState->arrowsIn[$targetId][$groupId] = $this->baseState->arrowsOut[$groupId][$targetId];
-			}
-			$arrowsIn = $this->baseState->arrowsIn[$nodeId] ?? [];
-			foreach ($arrowsIn as $sourceId => $arrowIn) {
-				$this->baseState->arrowsOut[$sourceId][$groupId] ??= $this->createArrow($sourceId, $groupId, 0);
-				$this->baseState->arrowsOut[$sourceId][$groupId]['calls'] += $arrowIn['calls'];
-                                //echo "Adding {$arrowIn['calls']} incoming arrow from $sourceId 
-                                //to added $groupId because of its inner node $nodeId<br>".PHP_EOL;
-                                $timeInc = $arrowIn['timeInclusive'];
-                                $this->baseState->arrowsOut[$sourceId][$groupId]['timeInclusive'] += $timeInc;
-                                if (!in_array($sourceId, $innerNodesId)) {
-                                    // Here we have true incoming arrow from $sourceId toward $groupId.
-                                    $groupTimeInclusive += $timeInc;
-                                }
-				$this->baseState->arrowsIn[$groupId][$sourceId] = $this->baseState->arrowsOut[$sourceId][$groupId];
-			}
-		}
-	}
-
-        public function removeInnerNodes($groupId) {
-                
-                if (empty($this->baseState->nodes[$groupId]) ) { return ; }
-                $group = $this->baseState->nodes[$groupId]; 
-                $innerNodesId = $group['innerNodesId']??[]; 
-                foreach ($innerNodesId as $nodeId) {
-                        $this->removeNode($nodeId); 
-                        //echo "Removed node $nodeId.". PHP_EOL; 
-                }
-                $group['innerNodesId'] = [];
-        }
-
-        public function removeNode($nodeId) {
-		if (isset($this->baseState->arrowsIn[$nodeId])) {
-			foreach ($this->baseState->arrowsIn[$nodeId] as $sourceId => $arrow) {
-                                unset($this->baseState->arrowsOut[$sourceId][$nodeId]);
-                                unset($this->baseState->arrowsIn[$nodeId][$sourceId]);
-			}
-			if (empty($this->baseState->arrowsOut[$sourceId])) {
-				unset($this->baseState->arrowsOut[$sourceId]);
-			}
-   			if (empty($this->baseState->arrowsIn[$nodeId])) {
-				unset($this->baseState->arrowsIn[$nodeId]);
-			}
-		}
-		if (isset($this->baseState->arrowsOut[$nodeId])) {
-			foreach ($this->baseState->arrowsOut[$nodeId] as $targetId => $arrow) {
-				unset($this->baseState->arrowsOut[$nodeId][$targetId]);
-                                unset($this->baseState->arrowsIn[$targetId][$nodeId]);                                    
-			}
-			if (empty($this->baseState->arrowsOut[$nodeId])) {
-				unset($this->baseState->arrowsOut[$nodeId]);
-			}
-			if (empty($this->baseState->arrowsIn[$targetId])) {
-				unset($this->baseState->arrowsIn[$targetId]);
-                        }
-		}
-                $this->removeInnerNodes($nodeId);
-		unset($this->baseState->nodes[$nodeId]);
-        }
-        
-        private function createArrow(string $sourceId, string $targetId, $calls = 1) {
-		$arrow['sourceId']      = $sourceId;
-		$arrow['targetId']      = $targetId;
-		$arrow['calls']         = $calls; 
-                $arrow['timeInclusive'] = 0; 
-                return $arrow; 
-	}
 
         private function setTimeFlowOfNode($currentId) {
 	    // To be executed on the tree only.

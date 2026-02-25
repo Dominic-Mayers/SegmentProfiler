@@ -2,7 +2,7 @@
 
 namespace App;
 
-use App\TotalGraph;
+use App\TreePhase;
 use App\ActiveGraph;
 
 #[Exclude]
@@ -12,11 +12,11 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
 
         public function __construct (
                 BaseState $baseState,
-                TotalGraph $totalGraph,
-                GroupingState $groupingState, 
+                TreePhase $treePhase,
+                GroupState $groupState, 
                 ActiveGraph $activeGraph
         ) {
-            parent::__construct($baseState, $totalGraph, $groupingState);
+            parent::__construct($baseState, $treePhase, $groupState);
             $this->activeGraph = $activeGraph;
         }
         
@@ -31,7 +31,7 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
             $node = $this->baseState->nodes[$currentId]; 
             unset($node['innerNodesId']); 
             $this->activeGraph->nodes[$currentId] = $node;
-            $adjArrowsOut = $this->groupingState->adjActiveArrowsOut($currentId);
+            $adjArrowsOut = $this->groupState->adjActiveArrowsOut($currentId);
             if ( ! empty($adjArrowsOut)) {
                 unset($adjArrowsOut['timeInclusive']); 
                 $this->activeGraph->arrowsOut[$currentId] = $adjArrowsOut;   

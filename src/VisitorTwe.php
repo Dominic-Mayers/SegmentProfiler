@@ -18,7 +18,7 @@ class VisitorTwe extends AbstractVisitorT {
 	public function afterChildrenProcess($currentId) {
 
             $key = $this->getTreeKey($currentId, 'treeKeyWithEmpty'); 
-            $treeLabelWithEmpty = $this->totalGraph->treeLabels['treeKeyWithEmpty'][$key]; 
+            $treeLabelWithEmpty = $this->treePhase->treeLabels['treeKeyWithEmpty'][$key]; 
             $this->groups[$treeLabelWithEmpty][] = $currentId;
            
             //echo "Added $currentId in group $treeLabel.". PHP_EOL; 
@@ -28,16 +28,16 @@ class VisitorTwe extends AbstractVisitorT {
             foreach ($this->groups as $treeLabelWithEmpty => $group) {
                 if (count($group) > 1 ) {
                     $innerLabel = explode(".", $treeLabelWithEmpty)[0]; 
-                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'Twe', $group, $groupRep);
-                    $this->totalGraph->createGroup($groupId);
+                    $groupRep = $this->baseState->nodes[$group[0]]; 
+                    $groupId = $this->groupState->addGroup($innerLabel, 'Twe', $group, $groupRep);
+                    $this->groupState->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['Twe']) ) {
-                        $this->totalGraph->removeInnerNodes($groupId);
+                        $this->treePhase->removeInnerNodes($groupId);
                     }
                     //echo "Added group $groupId". PHP_EOL;                     
                 }
             }
-            //$this->totalGraph->removeNode('Twe1');
+            //$this->treePhase->removeNode('Twe1');
             unset($this->groups); 
         }
 }

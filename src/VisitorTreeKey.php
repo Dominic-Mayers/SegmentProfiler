@@ -6,8 +6,8 @@ class VisitorTreeKey extends AbstractVisitorT {
 
 
         public function init() {
-            $this->totalGraph->treeLabelsTranspose['treeKey'] = [];
-            $this->totalGraph->treeLabels['treeKey'] = []; 
+            $this->treePhase->treeLabelsTranspose['treeKey'] = [];
+            $this->treePhase->treeLabels['treeKey'] = []; 
         }
         
         public function afterChildrenProcess($currentId) {

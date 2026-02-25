@@ -13,12 +13,12 @@ abstract class AbstractVisitorContraction extends AbstractVisitor {
         
         public function __construct(
                 BaseState $baseState, 
-                TotalGraph $totalGraph,
-                GroupingState $groupingState, 
+                TreePhase $treePhase,
+                GroupState $groupState, 
                 int $chosenParameter = 0, 
         ) {
             $this->chosenParameter = $chosenParameter; 
-            parent::__construct($baseState, $totalGraph, $groupingState);
+            parent::__construct($baseState, $treePhase, $groupState);
         }
 
         public function getHeights() {
@@ -59,10 +59,10 @@ abstract class AbstractVisitorContraction extends AbstractVisitor {
                 if (count($group) > 1 ) {
                     $innerLabel = $this->baseState->nodes[$nodeId]['attributes']['innerLabel'];
                     $groupRep = $this->baseState->nodes[$nodeId]; 
-                    $groupId = $this->totalGraph->addGroup($innerLabel, 'CTweC', $group, $groupRep);
-                    $this->totalGraph->createGroup($groupId);
+                    $groupId = $this->groupState->addGroup($innerLabel, 'CTweC', $group, $groupRep);
+                    $this->groupState->createGroup($groupId);
                     if ( ! empty($this->groupsWithNoInnerNodes['CTweC']) ) {
-                        $this->totalGraph->removeInnerNodes($groupId);
+                        $this->treePhase->removeInnerNodes($groupId);
                     }
                     //echo "Added group $groupId.<br>". PHP_EOL;
                 }
@@ -96,9 +96,9 @@ abstract class AbstractVisitorContraction extends AbstractVisitor {
                     }
                     $this->chosen[$nodeId] =  ($this->availables[$nodeId] && 
                             \count($this->notChosenContiguousOf[$nodeId]) >= $this->chosenParameter); 
-                    if ($this->chosen[$nodeId] || $nodeId === $this->totalGraph->rootId) {
+                    if ($this->chosen[$nodeId] || $nodeId === $this->treePhase->rootId) {
                         $this->contiguousGroups[$nodeId] = [$nodeId, ...$this->notChosenContiguousOf[$nodeId]];
-                        $this->totalGraph->nodes[$nodeId]['attributes']['extraLabel'] = '!!';
+                        $this->treePhase->nodes[$nodeId]['attributes']['extraLabel'] = '!!';
                         //echo "There are ".count($this->notChosenContiguousOf[$nodeId]). " continguous not chosen node below <b>chosen node $nodeId.</b><br>". PHP_EOL; 
                     } // else { echo "There are ".count($this->notChosenContiguousOf[$nodeId]). " continguous not chosen node below node $nodeId.<br>". PHP_EOL;}
                 }

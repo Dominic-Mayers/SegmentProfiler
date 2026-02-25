@@ -3,8 +3,8 @@
 namespace App;
 
 use App\BaseState; 
-use App\GroupingState; 
-use App\TotalGraph;
+use App\GroupState; 
+use App\TreePhase;
 
 #[Exclude]
 abstract class AbstractVisitor  {
@@ -14,10 +14,10 @@ abstract class AbstractVisitor  {
         private $used; 
         
         public function __construct (protected BaseState $baseState,
-                                     protected TotalGraph $totalGraph,
-                                     protected GroupingState $groupingState,  
+                                     protected TreePhase $treePhase,
+                                     protected GroupState $groupState,  
                                      private $groupsWithNoInnerNodes = null) {
-                //$this->totalGraph = $totalGraph;
+                //$this->treePhase = $treePhase;
                 $this->groupsWithNoInnerNodes = $groupsWithNoInnerNodes;
                 $this->used = false; 
         }
@@ -57,7 +57,7 @@ abstract class AbstractVisitor  {
                     exit(); 
                 }
                 $currentChildrenArrowsOut = [];
-                $adjAllActiveOut = $this->groupingState->adjActiveArrowsOut($currentId);
+                $adjAllActiveOut = $this->groupState->adjActiveArrowsOut($currentId);
                 foreach ($adjAllActiveOut as $targetId => $arrow) {
                         if (! $this->isStackedChild($targetId)) {
                                 $this->stackedMultipleIncoming[$targetId] = true; 
@@ -71,7 +71,7 @@ abstract class AbstractVisitor  {
         
         protected function groupSiblingsPerCallBack($currentId, $groupType, $groupKeyCallback) {
         	$innerLabelGroups = [];
-		$adj = $this->groupingState->adjActiveArrowsOut($currentId);
+		$adj = $this->groupState->adjActiveArrowsOut($currentId);
 		foreach ($adj as $targetId => $arrow) {
                         if ($targetId === $currentId) {continue;}
                         $groupKey = $groupKeyCallback($targetId); 
@@ -80,20 +80,20 @@ abstract class AbstractVisitor  {
 		foreach ($innerLabelGroups as $groupKey => $group) {
 			if (count($group) > 1) {
                                 if ($groupType == 'CT' || $groupType == 'T' ) {
-                                    $innerLabel = explode('.', $this->totalGraph->treeLabels['treeKey'][$groupKey])[0];
-                                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
+                                    $innerLabel = explode('.', $this->treePhase->treeLabels['treeKey'][$groupKey])[0];
+                                    $groupRep = $this->baseState->nodes[$group[0]]; 
                                 } elseif ($groupType == 'CTwe' || $groupType == 'Twe') {
-                                    $treeLabel = $this->totalGraph->treeLabels['treeKeyWithEmpty'][$groupKey]; 
+                                    $treeLabel = $this->treePhase->treeLabels['treeKeyWithEmpty'][$groupKey]; 
                                     $innerLabel = explode('.', $treeLabel)[0];
-                                    $groupRep = $this->totalGraph->nodes[$group[0]]; 
+                                    $groupRep = $this->baseState->nodes[$group[0]]; 
                                 } else {
                                     $innerLabel = $groupKey;
                                     $groupRep = null; 
                                 }
-                                $groupId = $this->totalGraph->addGroup($innerLabel, $groupType, $group, $groupRep );
-                                $this->totalGraph->createGroup($groupId);
+                                $groupId = $this->groupState->addGroup($innerLabel, $groupType, $group, $groupRep );
+                                $this->groupState->createGroup($groupId);
                                 if ( ! empty($this->groupsWithNoInnerNodes[$groupType]) ) {
-                                     $this->totalGraph->removeInnerNodes($groupId);
+                                     $this->treePhase->removeInnerNodes($groupId);
                                 }
 			}
 		}
@@ -102,7 +102,7 @@ abstract class AbstractVisitor  {
         private function isStackedChild($targetId) {
                 // This is only valid when called in setChildrenArrowsOut, which
                 // is itself called in the beforeChildren method. 
-                $isStacked = $this->groupingState->incomingActiveOrder($targetId) > 1 &&  
+                $isStacked = $this->groupState->incomingActiveOrder($targetId) > 1 &&  
                         isset($this->stackedMultipleIncoming[$targetId]);
                 return $isStacked; 
         }

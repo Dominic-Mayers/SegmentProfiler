@@ -3,20 +3,20 @@
 namespace App;
 
 use App\BaseState; 
-use App\TotalGraph;
+use App\TreePhase;
 use App\AbstractVisitor;
 
 class Traversal {
     
         
-        public function __construct(private BaseState $baseState, private TotalGraph $totalGraph) {
+        public function __construct(private BaseState $baseState, private TreePhase $treePhase) {
         }
         
 	public function visitNodes(AbstractVisitor $visitor, $rootId = null) {
                 $visitor->exitIfUsed(); 
 		method_exists($visitor, "init") && $visitor->init();
                 // Must manage the case where the root is in a group
-                $rootId ??= $this->findActiveContainingGroup($this->totalGraph->rootId);
+                $rootId ??= $this->findActiveContainingGroup($this->treePhase->rootId);
 		$toProcess = [$rootId];
 		$visited = [];
 		while (true) {

@@ -10,8 +10,8 @@ class VisitorContractionOnTwe extends AbstractVisitorContraction {
         private $groupsPerKey;
         private $treeSizePerKey;
         
-        public function __construct(BaseState $baseState, TotalGraph $totalGraph, GroupingState $groupingState, int $chosenParameter, int $forestParameter) {
-            parent::__construct($baseState, $totalGraph, $groupingState, $chosenParameter);
+        public function __construct(BaseState $baseState, TreePhase $treePhase, GroupState $groupState, int $chosenParameter, int $forestParameter) {
+            parent::__construct($baseState, $treePhase, $groupState, $chosenParameter);
             $this->availables = [];
             $this->forest = []; 
             $this->forestParameter = $forestParameter;

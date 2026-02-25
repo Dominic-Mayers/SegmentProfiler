@@ -19,7 +19,7 @@ abstract class AbstractVisitorT extends AbstractVisitor {
         
         private function setNewTree_($currentId, $treeKeyType) {
             
-            //$this->totalGraph->treeLabelsTranspose[$treeKeyType] = [];
+            //$this->treePhase->treeLabelsTranspose[$treeKeyType] = [];
             $adj = $this->getChildrenArrowsOut($currentId);            
             $treeLabel = $this->baseState->nodes[$currentId]['attributes']['innerLabel']; 
             //echo "set innerLabel ". $this->baseState->nodes[$currentId]['attributes']['innerLabel']] . " of new treeLabel." . PHP_EOL;
@@ -29,13 +29,13 @@ abstract class AbstractVisitorT extends AbstractVisitor {
             }
             //echo "Set treeLabel of $currentId to $treeLabel" . PHP_EOL;
             
-            if ( ! isset($this->totalGraph->treeLabelsTranspose[$treeKeyType][$treeLabel] ) ) {
-                $this->totalGraph->treeLabels[$treeKeyType][] = $treeLabel;
-                $treeKey = \array_key_last($this->totalGraph->treeLabels[$treeKeyType]); 
-                $this->totalGraph->treeLabelsTranspose[$treeKeyType][$treeLabel] = $treeKey;
+            if ( ! isset($this->treePhase->treeLabelsTranspose[$treeKeyType][$treeLabel] ) ) {
+                $this->treePhase->treeLabels[$treeKeyType][] = $treeLabel;
+                $treeKey = \array_key_last($this->treePhase->treeLabels[$treeKeyType]); 
+                $this->treePhase->treeLabelsTranspose[$treeKeyType][$treeLabel] = $treeKey;
                 //echo "Added new $treeKey => $treeLabel in treeLabels.". PHP_EOL; 
             } else {
-                $treeKey = $this->totalGraph->treeLabelsTranspose[$treeKeyType][$treeLabel]; 
+                $treeKey = $this->treePhase->treeLabelsTranspose[$treeKeyType][$treeLabel]; 
             }
             $this->baseState->nodes[$currentId]['attributes'][$treeKeyType] = $treeKey;
             return [$treeKey, $treeLabel] ; 

@@ -2,7 +2,8 @@
 namespace App;
 use Graphp\Graph\Graph; 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use App\TotalGraph; 
+use App\TreePhase;
+use App\BaseState; 
 use App\ActiveGraph; 
 use App\Traversal; 
 
@@ -25,10 +26,9 @@ class UI {
 	public Graph $graph;
 	
 	public function __construct(
-                private TotalGraph $totalGraph,
-                private ActiveGraph $activeGraph, 
-                private Traversal $traversal,
-		private UrlGeneratorInterface $urlGenerator,
+                private TreePhase $treePhase,
+                private ActiveGraph $activeGraph,
+                private BaseState $baseState,
 	) {
 	}
 
@@ -115,7 +115,7 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
         
 	public function getSubGraph($startId, $arrows = null) : array {
                 if (empty($startId)) {
-                    return [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId]; 
+                    return [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->treePhase->rootId]; 
                 }
                 if ($this->activeGraph->nodes[$startId]['type']=== 'TTD' || 
                     $this->activeGraph->nodes[$startId]['type']=== 'TTweD')
@@ -186,7 +186,7 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
                 // This also applies to $input. It is stored in the URLs to pass the state.
 		$cM = $this->cM; 
 		$this->graph = new Graph();
-		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->totalGraph->rootId];
+		[$V, $A, $R] = $graphArr ?? [$this->activeGraph->nodes, $this->activeGraph->arrowsOut, $this->treePhase->rootId];
                 $dot = "digraph {" . PHP_EOL;
                 foreach ($V as $nodeId => $node) {
                     $cC = $node['attributes']['colorCode'];
@@ -209,7 +209,7 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
         
 	public function activateGroup($groupId, $permanent) {
 
-		foreach ($this->totalGraph->nodes[$groupId]['innerNodesId'] as $nodeId) {
+		foreach ($this->baseState->nodes[$groupId]['innerNodesId'] as $nodeId) {
 			$this->deactivateNode($nodeId);
                         if ( $permanent ) {
                             $this->removeNode($nodeId);
@@ -217,7 +217,7 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
 		}
 		$this->activateNode($groupId);
                 if ($permanent) {
-                    $this->totalGraph->nodes[$groupId]['innerNodesId'] = [];
+                    $this->baseState->nodes[$groupId]['innerNodesId'] = [];
                 }
                 $this->setColorCode(); 
 	}
@@ -225,7 +225,7 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
 	public function deactivateGroup($groupId) {
 
 		$this->deactivateNode($groupId);
-		foreach ($this->totalGraph->nodes[$groupId]['innerNodesId'] as $nodeId) {
+		foreach ($this->baseState->nodes[$groupId]['innerNodesId'] as $nodeId) {
 			$this->activateNode($nodeId);
 		}
                 $this->setColorCode(); 
@@ -233,9 +233,9 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
 
 	private function activateNode($nodeId) {
 
-		$this->activeGraph->nodes[$nodeId] = $this->totalGraph->nodes[$nodeId];
-		if (isset($this->totalGraph->arrowsIn[$nodeId])) {
-			foreach ($this->totalGraph->arrowsIn[$nodeId] as $sourceId => $arrow) {
+		$this->activeGraph->nodes[$nodeId] = $this->baseState->nodes[$nodeId];
+		if (isset($this->treePhase->arrowsIn[$nodeId])) {
+			foreach ($this->treePhase->arrowsIn[$nodeId] as $sourceId => $arrow) {
 				if (isset($this->activeGraph->nodes[$sourceId])) {
 					$this->activeGraph->arrowsOut[$sourceId][$nodeId] = $arrow;
 					$this->activeGraph->arrowsIn[$nodeId][$sourceId]  = $arrow;
@@ -243,8 +243,8 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
 			}
 		}
 
-		if (isset($this->totalGraph->arrowsOut[$nodeId])) {
-			foreach ($this->totalGraph->arrowsOut[$nodeId] as $targetId => $arrow) {
+		if (isset($this->treePhase->arrowsOut[$nodeId])) {
+			foreach ($this->treePhase->arrowsOut[$nodeId] as $targetId => $arrow) {
 				if (isset($this->activeGraph->nodes[$targetId])) {
 					$this->activeGraph->arrowsOut[$nodeId][$targetId] = $arrow;
                                         $this->activeGraph->arrowsIn[$targetId][$nodeId]  = $arrow;
@@ -255,8 +255,8 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
 
 	private function deactivateNode($nodeId) {
 
-		if (isset($this->totalGraph->arrowsOut[$nodeId])) {
-			foreach ($this->totalGraph->arrowsOut[$nodeId] as $targetId => $arrow) {
+		if (isset($this->treePhase->arrowsOut[$nodeId])) {
+			foreach ($this->treePhase->arrowsOut[$nodeId] as $targetId => $arrow) {
 				unset($this->activeGraph
                                         ->arrowsOut
                                         [$nodeId]
@@ -270,8 +270,8 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
 				unset($this->activeGraph->arrowsIn[$targetId]);
 			}
 		}
-		if (isset($this->totalGraph->arrowsIn[$nodeId])) {
-			foreach ($this->totalGraph->arrowsIn[$nodeId] as $sourceId => $arrow) {
+		if (isset($this->treePhase->arrowsIn[$nodeId])) {
+			foreach ($this->treePhase->arrowsIn[$nodeId] as $sourceId => $arrow) {
 				unset($this->activeGraph
                                         ->arrowsOut
                                         [$sourceId]
@@ -289,7 +289,7 @@ private function assignNCcilesWithTies(array &$V, array $groups, float $scale, i
 	}
 
         private function getVizLabel($nodeId) {
-		$node = $this->totalGraph->nodes[$nodeId]; 
+		$node = $this->baseState->nodes[$nodeId]; 
 		if ( isset($node['attributes']['timeExclusive'] ) ) {
 			$excTime = $node['attributes']['timeExclusive'];
 			$excTimeInMillisec = number_format($excTime / 1E+6, 3);

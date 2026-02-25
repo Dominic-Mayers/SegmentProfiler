@@ -2,7 +2,7 @@
 namespace App;
 use App\GraphTransformationAPI;
 use App\BaseState; 
-use App\TotalGraph; 
+use App\TreePhase; 
 use App\ActiveGraph;
 
 class Backend {
@@ -10,7 +10,7 @@ class Backend {
 	public function __construct(
                 private GraphTransformationAPI $graphTransformationAPI, 
                 private BaseState $baseState, 
-                private TotalGraph $totalGraph,
+                private TreePhase $treePhase,
                 private ActiveGraph $activeGraph, 
 	) {
 	}
@@ -27,10 +27,11 @@ class Backend {
                 $this->setTree($input);
                 //$this->graphTransformationAPI->createDefaultActiveGraph();
                 //$this->graphTransformationAPI->contractionOnTwe();
-                $this->graphTransformationAPI->groupCL();
-                $this->graphTransformationAPI->createDefaultActiveGraph();
+                //$this->graphTransformationAPI->groupCL();
+                //$this->graphTransformationAPI->groupCT();
+                $this->graphTransformationAPI->groupTwe();
                 //$this->graphTransformationAPI->groupCTwe();
-                //$this->graphTransformationAPI->groupTTweD();                
+                $this->graphTransformationAPI->createDefaultActiveGraph();
                 $this->saveGraphInFile($filenameTotal, false); 
                 $this->saveGraphInFile($filenameActive, true);
                 return [$this->activeGraph->nodes, $this->activeGraph->arrowsOut]; 
@@ -48,7 +49,7 @@ class Backend {
             if ($active) {
                 $gr = & $this->activeGraph; 
             } else {
-                $gr = & $this->totalGraph;                
+                $gr = & $this->treePhase;                
             }
             $gr->nodes     = $nodes;
             $gr->arrowsIn  = $arrowsIn;
@@ -79,7 +80,7 @@ class Backend {
 
         private function setTree ($input) {
 		$notesFile = new \SplFileObject(__DIR__. '/Fixtures/'.$input.'.profile');
-        	$this->totalGraph->getTree($notesFile);
+        	$this->treePhase->getTree($notesFile);
                 $this->graphTransformationAPI->setTreeKeyWithEmpty();
                 $this->graphTransformationAPI->setTreeKey();
                 //xdebug_break();
