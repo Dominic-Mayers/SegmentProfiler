@@ -29,7 +29,10 @@ class VisitorDefaultActiveGraph extends AbstractVisitor {
         
         public function beforeChildrenDefinition($currentId) {
             $node = $this->baseState->nodes[$currentId]; 
-            unset($node['innerNodesId']); 
+            if (!empty ($node['innerNodesId'])) {
+                $node['isGroup'] = true; 
+                unset($node['innerNodesId']);
+            }
             $this->activeGraph->nodes[$currentId] = $node;
             $adjArrowsOut = $this->groupState->adjActiveArrowsOut($currentId);
             if ( ! empty($adjArrowsOut)) {

@@ -12,15 +12,22 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class SegmentProfilerController extends AbstractController {
     
-        #[Route('/expansGroup/{input}/{groupId}', name: 'expandGroup')]
+        #[Route('/expandGroup/{input}/{groupId}', name: 'expandGroup')]
         public function expandGroup(Backend $backend, $input,  $groupId) : JsonResponse {
-                $state = $this->computeState ($backend, $input, $groupId); // To modify 
+                $backend->restoreGraph($input); 
+                if ( ! $backend->fromFile ) {
+                    echo "Error: Graphs $input not found on files." .PHP_EOL; 
+                    exit(); 
+                }
+                $state = $backend->getGroup ($groupId);
+                $state['graphId'] = $input; 
                 return $this->json($state); 
         }
 
         #[Route('/show/{input}', name: 'show')]
         public function show(Backend $backend, $input) : Response {
-                $state = $this->computeState ($backend, $input);   
+                $state = $this->computeState ($backend, $input);  
+                $state['graphId'] = $input; 
                 return $this->render('graph/show.html.twig', [
                     'graph_state' => $state,
                 ]);
@@ -35,7 +42,9 @@ class SegmentProfilerController extends AbstractController {
         }
 	
         private function computeState (Backend $backend, $input,) {
-                return $backend->computeGraphStates ($input); 
+                $state = $backend->computeGraphStates ($input);
+                $state['graphId'] = $input; 
+                return $state; 
         }
 
         private function computeSvg (Backend $backend, UI $ui, $input, $toUngroup, $startId) {
